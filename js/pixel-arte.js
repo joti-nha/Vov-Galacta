@@ -377,7 +377,8 @@ const ICONES_JOGOS = {
 
 // desenha num canvas; "tamanho" é o lado final em pixels de tela; "mapa" troca os pratos pelos ícones
 function pixelCanvas(nome, tamanho, mapa) {
-  const sprite = (mapa || SPRITES)[nome] || SPRITES[SPRITE_PADRAO];
+  // "nome" também pode ser o próprio desenho (os ícones de ingrediente com cor própria)
+  const sprite = typeof nome === 'object' ? nome : (mapa || SPRITES)[nome] || SPRITES[SPRITE_PADRAO];
   const lado = sprite.linhas.length;
   const escala = Math.max(1, Math.floor(tamanho / lado));
   const canvas = document.createElement('canvas');
@@ -520,38 +521,152 @@ const INGREDIENTES_ICONES = {
   pote: { nome: 'Ingrediente', cores: { D: '#8a5526', C: '#d9b06a', W: '#f6efe2' }, linhas: ['..KKKKKK..', '..KDDDDK..', '.KKKKKKKK.', '.KCCCCCCK.', '.KCWWWWCK.', '.KCWCCWCK.', '.KCWWWWCK.', '.KCCCCCCK.', '.KCCCCCCK.', '..KKKKKK..'] }
 };
 
-// qual ícone combina com o nome do ingrediente (português ou inglês)
+// formas que se repetem com outra cor (bisnaga de mostarda, garrafa de azeite, pote de páprica...)
+Object.assign(INGREDIENTES_ICONES, {
+  alho: { nome: 'Alho', cores: { W: '#f4efe2', w: '#d8cdb5' }, linhas: ['....KK....', '....WK....', '...KWWK...', '..KWwWWK..', '.KWWwWWwK.', '.KWwWWwWK.', '.KWWwWWwK.', '..KWWwWK..', '...KKKK...', '..........'] },
+  cebola: { nome: 'Cebola', cores: { O: '#c97a3a', o: '#a85d2a', G: '#6cc04a', r: '#e9dcc0' }, linhas: ['....G.....', '....GK....', '...KOOK...', '..KOoOOK..', '.KOOoOOOK.', '.KOoOOoOK.', '.KOOoOOOK.', '..KOOoOK..', '...KKKK...', '....rr....'] },
+  tomate: { nome: 'Tomate', cores: { G: '#4f9a3a', R: '#e0453a', W: '#ffb0a0' }, linhas: ['....G.....', '..GGGGG...', '.KRRGRRK..', 'KRRRRRRRK.', 'KRWRRRRRK.', 'KRRRRRRRK.', 'KRRRRRRRK.', '.KRRRRRK..', '..KKKKK...', '..........'] },
+  batata: { nome: 'Batata', cores: { B: '#c9995a', b: '#8a6a3a' }, linhas: ['..........', '...KKKK...', '..KBBBBKK.', '.KBbBBBBBK', 'KBBBBBbBBK', 'KBBbBBBBBK', '.KBBBBBbK.', '..KKKKKK..', '..........', '..........'] },
+  cogumelo: { nome: 'Cogumelo', cores: { R: '#a8744a', W: '#f4efe2' }, linhas: ['..........', '...KKKK...', '.KKRRRRKK.', 'KRRWRRWRRK', 'KRRRRRRRRK', 'KKKKKKKKKK', '...KWWK...', '...KWWK...', '...KWWK...', '...KKKK...'] },
+  limao: { nome: 'Limão', cores: { Y: '#8fd64a', W: '#d6f2a8' }, linhas: ['..........', '..........', '...KKKK...', '..KYYYYKK.', '.KYYWYYYYK', 'KKYYYYYYK.', '.KYYYYYYK.', '..KKYYKK..', '....KK....', '..........'] },
+  banana: { nome: 'Banana', cores: { Y: '#f6dd4a' }, linhas: ['........KK', '.......KYK', '......KYYK', '.....KYYK.', '...KKYYYK.', 'KKKYYYYK..', 'KYYYYYK...', '.KKKKK....', '..........', '..........'] },
+  abacaxi: { nome: 'Abacaxi', cores: { G: '#6cc04a', Y: '#f2c230', y: '#c9902a' }, linhas: ['...G.G.G..', '....GGG...', '...KKKKK..', '..KYyYyYK.', '..KyYyYyK.', '..KYyYyYK.', '..KyYyYyK.', '..KYyYyYK.', '...KKKKK..', '..........'] },
+  maca: { nome: 'Maçã', cores: { G: '#6cc04a', R: '#d8393b', W: '#ffb0a0' }, linhas: ['....K.G...', '....KGG...', '..KKKKKK..', '.KRRRRRRK.', 'KRWRRRRRRK', 'KRRRRRRRRK', 'KRRRRRRRRK', '.KRRRRRRK.', '..KKKKKK..', '..........'] },
+  milho: { nome: 'Milho', cores: { Y: '#f6d35a', y: '#d9a92a', G: '#6cc04a' }, linhas: ['....KK....', '...KYYK...', '..KYyYYK..', '..KYYyYK..', '..KyYYyK..', '..KYYyYK..', '..KYyYYK..', '.GKKYYKKG.', '..GG..GG..', '..........'] },
+  pepino: { nome: 'Pepino', cores: { G: '#4f9a3a', g: '#8fd66a' }, linhas: ['..........', '......KKK.', '.....KGgGK', '....KGgGK.', '...KGgGK..', '..KGgGK...', '.KGgGK....', '.KGGK.....', '..KK......', '..........'] },
+  tofu: { nome: 'Bloco', cores: { W: '#f4f1ea', w: '#d9d2c0' }, linhas: ['..........', '..KKKKKKK.', '.KWWWWWWKK', 'KWWWWWWKwK', 'KKKKKKKwwK', 'KWWWWWKwwK', 'KWWWWWKwK.', 'KWWWWWKK..', 'KKKKKKK...', '..........'] },
+  camarao: { nome: 'Camarão', cores: { O: '#f28a6a', o: '#c4553c' }, linhas: ['..........', '...KKKK...', '..KOOOOKK.', '.KOoKKOOOK', '.KOK..KOOK', '..K...KOOK', '....KKOOK.', '...KOOOK..', '..KOOKK...', '...KK.....'] },
+  chocolate: { nome: 'Chocolate', cores: { C: '#6b3b22', c: '#4a2716', W: '#c9d6de', R: '#e0453a' }, linhas: ['..........', '.KKKKKKKK.', '.KCcCcCcK.', '.KccccccK.', '.KCcCcCcK.', '.KccccccK.', '.KWWWWWWK.', '.KRRRRRRK.', '.KKKKKKKK.', '..........'] },
+  mel: { nome: 'Mel', cores: { D: '#8a5526', H: '#f2a52e', h: '#d9821e', W: '#c8904a' }, linhas: ['......K...', '.....KW...', '..KKKKWKK.', '.KDDDKWDDK', '.KHHHHHHHK', '.KHhHHHhHK', '.KHHHHHHHK', '..KHHhHHK.', '...KKKKK..', '..........'] },
+  coco: { nome: 'Coco', cores: { B: '#7a5230', b: '#5a3a20' }, linhas: ['..........', '...KKKK...', '..KBBBBK..', '.KBbBBbBK.', '.KBBBBBBK.', '.KBBbBBBK.', '..KBBBBK..', '...KKKK...', '..........', '..........'] },
+  tigela: { nome: 'Tigela', cores: { C: '#ffffff', c: '#dfe8ee', B: '#3b6fb0' }, linhas: ['..........', '..........', '...CcCcC..', '..CcCcCcC.', 'KKKKKKKKKK', 'KBBBBBBBBK', '.KBBBBBBK.', '..KBBBBK..', '...KKKK...', '..........'] },
+  pimenta: { nome: 'Pimenta', cores: { G: '#4f9a3a', R: '#e0453a' }, linhas: ['......G...', '.....GG...', '....KRRK..', '...KRRRK..', '..KRRRK...', '.KRRRK....', '.KRRK.....', '..KK......', '..........', '..........'] },
+  ervas: { nome: 'Ervas', cores: { G: '#4f9a3a', g: '#8fd66a' }, linhas: ['..........', '...G.G....', '..GgG.G...', '...G.GgG..', '..GgGG.G..', '....G.....', '....g.....', '....g.....', '..........', '..........'] },
+  rocha: { nome: 'Pedra', cores: { R: '#9fb0bc', r: '#6f8fa5' }, linhas: ['..........', '...KKKK...', '..KRRrRKK.', '.KRrRRRRK.', '.KRRRRrRK.', '.KRrRRRRK.', '..KRRRrK..', '...KKKK...', '..........', '..........'] },
+  esfera: { nome: 'Buraco negro', cores: { P: '#c38bff' }, linhas: ['..........', '...KKKK...', '..KKKKKK..', 'PPKKKKKKPP', 'PPPKKKKPPP', '..KKKKKK..', '...KKKK...', '..........', '..........', '..........'] },
+  brilho: { nome: 'Poeira de cometa', cores: { S: '#9fd8ff', W: '#ffffff' }, linhas: ['....S.....', '...SWS....', '....S...S.', '.......SWS', '..S.....S.', '.SWS......', '..S...S...', '......S...', '.....SWS..', '......S...'] },
+  copo: { nome: 'Copo', cores: { W: '#cfe3ec', C: '#f4f1ea' }, linhas: ['..........', '.KKKKKKKK.', '.KWWWWWWK.', '.KCCCCCCK.', '..KCCCCK..', '..KCWWCK..', '..KCCCCK..', '..KCCCCK..', '...KKKK...', '..........'] },
+  bisnaga: { nome: 'Bisnaga', cores: { C: '#e0453a', B: '#f6efd2', W: '#ffffff' }, linhas: ['....K.....', '...KCK....', '...KCK....', '..KKKKK...', '.KBBBBBK..', '.KBWWBBK..', '.KBBBBBK..', '.KBBBBBK..', '.KBBBBBK..', '..KKKKK...'] },
+  frasco: { nome: 'Garrafa', cores: { C: '#e9e4c8', W: '#ffffff' }, linhas: ['....KK....', '....KK....', '...KCCK...', '...KCCK...', '..KCCCCK..', '.KCCCCCCK.', '.KCWCCCCK.', '.KCWCCCCK.', '.KCCCCCCK.', '..KKKKKK..'] }
+});
+
+/* Qual desenho (e qual cor) combina com o nome do ingrediente, em português ou inglês.
+   Do mais específico para o mais geral: "alho em pó" antes de "alho", "sal de cebola" antes de "sal". */
 const ICONE_POR_PALAVRA = [
-  ['estrela', /cometa|nebulosa|asteroide|marte|\blua\b|buraco negro/],
-  ['ovo', /\bovo|egg|gema|clara/],
-  ['leite', /leite|milk|creme|cream|iogurte|yogurt/],
-  ['manteiga', /manteiga|butter/],
-  ['farinha', /farinha|flour|amido|aveia|oat|biscoit|biscuit|farofa/],
-  ['acucar', /a[cç]ucar|sugar|\bmel\b|honey|chocolate/],
-  ['sal', /\bsal\b|salt/],
-  ['frango', /frango|chicken/],
-  ['peixe', /peixe|fish|salm|camar|prawn|shrimp/],
-  ['carne', /carne|beef|bacon|porco|pork|cordeiro|lamb|hamb[uú]rguer|mince/],
-  ['queijo', /queijo|cheese|pecorino|mu[cç]arela|parmes/],
-  ['massa', /espaguete|spaghetti|macarr|\bmassa\b|pasta\b|penne/],
-  ['pao', /\bp[aã]o\b|\bp[aã]es\b|\bbun|bread|torrada|crouton/],
-  ['oleo', /[oó]leo|\boil\b|azeite/],
-  ['molho', /molho|sauce|maionese|mayonnaise|mostarda|mustard|vinagre|vinegar|caldo|stock|extrato|pur[eé]e|[aá]gua|water|ess[eê]ncia|extract/],
-  ['verdura', /alface|lettuce|repolho|cabbage|espinafre|folha|salada/],
-  ['legume', /cenoura|carrot|cebola|onion|batata|potato|ab[oó]bora|tomate|tomato|lentilha|lentil|feij|milho|pepino|picles|pickle|cogumelo|mushroom|alho\b|garlic/],
-  ['fruta', /morango|strawberr|framboesa|raspberr|mirtilo|blueberr|ma[cç][aã]|apple|banana|abacaxi|lim[aã]o|lemon|fruta|am[eê]ndoa|almond|nozes|castanha/],
-  ['tempero', /pimenta|pepper|p[aá]prica|paprika|cominho|cumin|or[eé]gano|s[aá]lvia|sage|tomilho|thyme|manjeric|basil|canela|cinnamon|tempero|spice|hortel|mint|manjerona|aipo|celery|gengibre|ginger|chili/]
+  // coisas da galáxia (as pegadinhas da despensa)
+  [/poeira de cometa/, 'brilho'],
+  [/geleia de nebulosa/, 'pote', { C: '#7a2aff', W: '#c38bff', D: '#2a1a5a' }],
+  [/sal de asteroide/, 'rocha'],
+  [/pimenta de marte/, 'pimenta', { R: '#ff4f2a', G: '#7a2aff' }],
+  [/leite de lua/, 'frasco', { C: '#d8e8ff', W: '#ffffff' }],
+  [/buraco negro/, 'esfera'],
+  // molhos e líquidos
+  [/maionese|mayonnaise/, 'bisnaga', { B: '#f6efd2', C: '#e0453a' }],
+  [/mostarda|mustard/, 'bisnaga', { B: '#f2c230', C: '#c99a1a' }],
+  [/ketchup|molho de tomate|tomato sauce/, 'bisnaga', { B: '#d8393b', C: '#2f7a2a' }],
+  [/vinagre|vinegar/, 'frasco', { C: '#ece6c6' }],
+  [/azeite|olive oil/, 'frasco', { C: '#9fae3a' }],
+  [/shoyu|soy sauce|molho de soja/, 'frasco', { C: '#3a2010', W: '#7a5230' }],
+  [/essencia|extract|baunilha|vanilla/, 'frasco', { C: '#8a5526', W: '#c8904a' }],
+  [/oleo|\boil\b/, 'frasco', { C: '#f2d24a' }],
+  [/caldo|stock|broth/, 'tigela', { C: '#c9995a', c: '#a8744a' }],
+  [/agua|water/, 'copo', { C: '#9fd8ff' }],
+  [/extrato de tomate|tomato puree|polpa de tomate/, 'pote', { C: '#d8393b', W: '#f6efe2' }],
+  [/leite de coco|coconut milk/, 'leite', { B: '#7a5230' }],
+  [/iogurte|yogurt/, 'copo', { C: '#f4f1ea', W: '#e78aa3' }],
+  [/creme|cream|nata/, 'copo', { C: '#f6efd2' }],
+  [/molho|sauce/, 'garrafaMolho'],
+  // potes e doces
+  [/\bmel\b|honey/, 'mel'],
+  [/pasta de amendoim|peanut butter/, 'pote', { C: '#a8744a', W: '#e0453a', D: '#e0453a' }],
+  [/geleia|\bjam\b/, 'pote', { C: '#a52a4a', W: '#f6efe2' }],
+  [/chocolate|cacau|cocoa/, 'chocolate'],
+  [/acucar mascavo|brown sugar/, 'acucar', { W: '#b9874a', L: '#8a5a2a', R: '#6b3b22' }],
+  [/acucar|sugar/, 'acucar'],
+  [/fermento|yeast|baking/, 'farinha', { S: '#f6efd2', s: '#e0453a' }],
+  [/biscoito|biscuit|bolacha|cookie/, 'tofu', { W: '#d9a35a', w: '#a8742f' }],
+  [/farinha|flour|amido|starch|farofa/, 'farinha'],
+  // laticínios e ovos
+  [/leite|milk/, 'leite'],
+  [/manteiga com sal|salted butter/, 'manteiga', { Y: '#f6e7a0', y: '#e0453a' }],
+  [/manteiga|butter/, 'manteiga'],
+  [/\bovo|egg|gema|clara/, 'ovo'],
+  [/queijo|cheese|pecorino|mucarela|mozzarella|parmes/, 'queijo'],
+  [/tofu/, 'tofu'],
+  // temperos (pós e sais com a cor de cada um)
+  [/alho em po|garlic powder/, 'tempero', { R: '#efe6d2', r: '#c9b48c' }],
+  [/sal de cebola|onion salt/, 'sal', { W: '#e8d6b0' }],
+  [/sal de aipo|celery salt/, 'sal', { W: '#d6e8b0' }],
+  [/sal marinho|sea salt/, 'sal', { W: '#e0f0ff', G: '#63d6e8' }],
+  [/\bsal\b|salt/, 'sal'],
+  [/paprica|paprika/, 'tempero', { R: '#d9552f', r: '#a8341f' }],
+  [/pimenta-do-reino|black pepper|pimenta preta/, 'tempero', { R: '#4a4a4a', r: '#1f1f1f', D: '#3a3a3a' }],
+  [/pimenta calabresa|red pepper flakes|chili powder|pimenta em po/, 'tempero', { R: '#e0453a', r: '#ff9a2a', D: '#e0453a' }],
+  [/pimenta-da-jamaica|allspice/, 'tempero', { R: '#6b3b22', r: '#4a2716' }],
+  [/cominho|cumin/, 'tempero', { R: '#b0803a', r: '#7a5230' }],
+  [/canela|cinnamon/, 'tempero', { R: '#8a4a22', r: '#6b3318' }],
+  [/noz-moscada|nutmeg/, 'coco', { B: '#a8744a', b: '#7a5230' }],
+  [/gengibre|ginger/, 'batata', { B: '#e0b070', b: '#b08040' }],
+  [/hortela|mint/, 'ervas', { G: '#2fae5a', g: '#9ff0b0' }],
+  [/salvia|sage/, 'ervas', { G: '#7f9a7a', g: '#b9cdb4' }],
+  [/oregano|tomilho|thyme|manjerona|marjoram|louro|bay leaf/, 'ervas', { G: '#5a7a2a', g: '#a8c46a' }],
+  [/manjeric|basil|salsa\b|coentro|cilantro|parsley|cebolinha/, 'ervas'],
+  [/pimenta|pepper|chili|jalapeno/, 'pimenta'],
+  // grãos
+  [/aveia|oat/, 'tigela', { C: '#e8d6b0', c: '#c9b48c' }],
+  [/arroz|rice/, 'tigela'],
+  [/feijao|bean/, 'tigela', { C: '#5a2a1a', c: '#3a1a10' }],
+  [/lentilha|lentil/, 'tigela', { C: '#c9702a', c: '#a8541a' }],
+  [/amendoa|almond|castanha|nozes|amendoim|peanut/, 'coco', { B: '#c99a6a', b: '#a8744a' }],
+  [/espaguete|spaghetti|macarrao|\bmassa\b|penne|lasanha/, 'massa'],
+  [/\bpao\b|\bpaes\b|\bbun|bread|torrada|crouton/, 'pao'],
+  // carnes e peixes
+  [/frango|chicken/, 'frango'],
+  [/camarao|prawn|shrimp/, 'camarao'],
+  [/salmao|salmon/, 'peixe', { F: '#f28a6a', f: '#e0653a' }],
+  [/peixe|fish|bacalhau|atum|tuna/, 'peixe'],
+  [/bacon|pancetta/, 'carne', { M: '#e06a5a', W: '#f6d6c8' }],
+  [/carne|beef|porco|pork|cordeiro|lamb|hamburguer|mince/, 'carne'],
+  // hortaliças e frutas
+  [/repolho|cabbage/, 'verdura', { G: '#9fd66a', g: '#5aa83a' }],
+  [/alface|lettuce|espinafre|spinach|couve|folha/, 'verdura'],
+  [/\balho\b|garlic/, 'alho'],
+  [/cebola|onion/, 'cebola'],
+  [/cenoura|carrot/, 'legume'],
+  [/batata|potato/, 'batata'],
+  [/abobora|pumpkin|squash/, 'maca', { R: '#f28a2e', W: '#ffc890', G: '#4f9a3a' }],
+  [/tomate|tomato/, 'tomate'],
+  [/cogumelo|mushroom|champignon/, 'cogumelo'],
+  [/pepino|cucumber|picles|pickle/, 'pepino'],
+  [/milho|corn/, 'milho'],
+  [/limao|lemon|lime/, 'limao'],
+  [/banana/, 'banana'],
+  [/abacaxi|pineapple/, 'abacaxi'],
+  [/maca verde|bramley|green apple/, 'maca', { R: '#8fd64a', W: '#d6f2a8' }],
+  [/\bmaca|apple/, 'maca'],
+  [/coco|coconut/, 'coco'],
+  [/framboesa|raspberr/, 'fruta', { R: '#c42a5a' }],
+  [/mirtilo|blueberr/, 'fruta', { R: '#4a5fd0', y: '#9fb0ff' }],
+  [/morango|strawberr|fruta|fruit/, 'fruta'],
+  [/tempero|spice|aipo|celery/, 'tempero']
 ];
 
-function iconeDoIngrediente(nome) {
-  const t = String(nome).toLowerCase();
-  const achado = ICONE_POR_PALAVRA.find(([, rx]) => rx.test(t));
-  return achado ? achado[0] : 'pote';
+INGREDIENTES_ICONES.garrafaMolho = INGREDIENTES_ICONES.molho;
+
+const semAcento = (t) => String(t).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+
+// o desenho do ingrediente, já com as cores dele
+function spriteDoIngrediente(nome) {
+  const t = semAcento(nome);
+  const achado = ICONE_POR_PALAVRA.find(([rx]) => rx.test(t));
+  const base = INGREDIENTES_ICONES[achado ? achado[1] : 'pote'];
+  if (!achado || !achado[2]) return base;
+  return { nome: base.nome, linhas: base.linhas, cores: Object.assign({}, base.cores, achado[2]) };
 }
 
 // ícone pequeno ao lado de um texto (decorativo: quem lê o texto já sabe o que é)
 function iconeIngrediente(nome, tamanho) {
-  const c = pixelCanvas(iconeDoIngrediente(nome), tamanho || 20, INGREDIENTES_ICONES);
+  const c = pixelCanvas(spriteDoIngrediente(nome), tamanho || 20);
   c.removeAttribute('role');
   c.removeAttribute('aria-label');
   c.setAttribute('aria-hidden', 'true');

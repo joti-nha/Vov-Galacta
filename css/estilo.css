@@ -530,13 +530,74 @@ button.cartao__arte:focus-visible { outline-offset: -4px; }
 .relogio__barra { height: 100%; width: 100%; background: var(--mare); }
 
 /* Separar e Montar: zonas e ingredientes que se arrastam */
-.zonas { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 0.75rem; }
 .zona { position: relative; display: grid; align-content: start; gap: 0.5rem; padding: 0.75rem; border-radius: var(--raio); border: 2px dashed var(--linha); min-height: 10rem; }
 .zona__nome { font-weight: 700; color: var(--nevoa-2); font-size: 0.85rem; }
 .zona__itens { display: flex; flex-wrap: wrap; gap: 0.4rem; align-content: start; }
-.zona--despensa { background: repeating-linear-gradient(0deg, transparent 0 46px, rgba(var(--mare-rgb), 0.08) 46px 50px), var(--casco-2); }
-.zona--bancada { border-color: var(--ambar); background: repeating-linear-gradient(90deg, #6b4a2b 0 18px, #74512f 18px 36px); }
-.zona--bancada .zona__nome { color: #f6e7c1; }
+
+/* Separar: o armário da despensa e a bancada da cozinha */
+.cozinha-separar { display: grid; gap: 0; }
+.armario {
+  position: relative; padding: 2.4rem 0.9rem 0.9rem; border-radius: 14px 14px 4px 4px;
+  background: #5a3418; border: 4px solid #2e1a0b; box-shadow: inset 0 0 0 4px #7a4a22, 0 8px 16px rgba(0, 0, 0, 0.35);
+}
+.armario__placa {
+  position: absolute; top: 0.45rem; left: 50%; transform: translateX(-50%);
+  padding: 0.15rem 0.9rem; border-radius: 6px; border: 2px solid #2e1a0b;
+  background: #f6e7c1; color: #4a2716; font-family: var(--titulo); font-weight: 800; font-size: 0.95rem; white-space: nowrap;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.3);
+}
+.armario__prateleiras {
+  display: grid; gap: 0.35rem; padding: 0.4rem 0.4rem 0;
+  background: repeating-linear-gradient(90deg, #2a170a 0 22px, #301b0c 22px 44px);
+  box-shadow: inset 0 6px 12px rgba(0, 0, 0, 0.6), inset 0 -2px 0 #1a0e05;
+}
+.prateleira { position: relative; padding-top: 0.4rem; }
+.prateleira::after {
+  content: ""; display: block; height: 12px; margin: 0 -0.4rem;
+  background: linear-gradient(#b8793a, #8a5526 55%, #5a3418); border-top: 2px solid #d9a35a;
+  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.55);
+}
+.prateleira__itens { display: flex; justify-content: space-around; align-items: flex-end; min-height: 86px; gap: 0.2rem; }
+.item-despensa {
+  flex-direction: column; justify-content: flex-end; gap: 0.15rem; width: 88px; min-height: 0; padding: 0.25rem 0.1rem 0;
+  background: none; border: 0; border-radius: 8px; color: #f6efe2; font-size: 0.75rem; font-weight: 700; line-height: 1.15;
+  transform: rotate(var(--inclina, 0deg)) translateY(calc(-1 * var(--recuo, 0px)));
+  cursor: grab; user-select: none; -webkit-user-select: none; transition: transform 0.15s;
+}
+.item-despensa .pixel { width: 44px; height: 44px; filter: drop-shadow(0 3px 0 rgba(0, 0, 0, 0.45)); }
+.item-despensa__nome { max-width: 100%; text-align: center; text-shadow: 0 1px 0 #000, 0 0 4px #000; overflow-wrap: anywhere; }
+.item-despensa:hover:not(:disabled) { transform: rotate(0deg) translateY(-6px); }
+.item-despensa:focus-visible { outline-offset: 0; }
+.item-despensa.is-arrastando { position: relative; z-index: 10; cursor: grabbing; transition: none; }
+.item-despensa.is-arrastando .pixel { filter: drop-shadow(0 12px 6px rgba(0, 0, 0, 0.5)); transform: scale(1.15); }
+.item-despensa.is-caiu { animation: cair-chip 0.3s ease-out; }
+.item-despensa:disabled { cursor: default; }
+.item-despensa.is-certo, .item-despensa.is-errado, .item-despensa.is-faltou { box-shadow: 0 0 0 3px var(--anel); background: rgba(0, 0, 0, 0.35); }
+.item-despensa.is-certo { --anel: var(--mare); }
+.item-despensa.is-errado { --anel: var(--erro); animation: tremer 0.3s; }
+.item-despensa.is-faltou { --anel: var(--ambar); }
+.item-despensa.is-certo::after, .item-despensa.is-errado::after, .item-despensa.is-faltou::after {
+  position: absolute; top: -8px; right: 2px; padding: 0 0.35rem; border-radius: 999px; font-size: 0.7rem; color: var(--abismo); background: var(--anel);
+}
+.item-despensa { position: relative; }
+.item-despensa.is-certo::after { content: "✓"; }
+.item-despensa.is-errado::after { content: "✕"; }
+.item-despensa.is-faltou::after { content: "faltou"; }
+
+.bancada { position: relative; margin-top: 0.9rem; }
+.bancada__tampo {
+  position: relative; min-height: 120px; padding: 0.5rem 0.75rem 0.75rem; border-radius: 10px 10px 0 0;
+  background: linear-gradient(#d9c7a0, #c4ad80); border: 4px solid #2e1a0b; border-bottom-width: 10px;
+  box-shadow: inset 0 3px 0 #efe2c2;
+}
+.bancada__tampo::before { content: ""; position: absolute; right: 14px; top: 14px; width: 110px; height: 70px; border-radius: 8px; background: repeating-linear-gradient(90deg, #a8742f 0 10px, #b8843f 10px 20px); box-shadow: 0 4px 0 #6b4a2b; opacity: 0.85; }
+.bancada__nome { position: relative; font-weight: 800; color: #4a2716; font-size: 0.85rem; }
+.bancada__itens { position: relative; display: flex; flex-wrap: wrap; align-items: flex-end; gap: 0.2rem 0.4rem; min-height: 80px; }
+.bancada__itens .item-despensa { color: #2e1a0b; transform: none; }
+.bancada__itens .item-despensa__nome { text-shadow: none; }
+.bancada__frente { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 6px; background: #5a3418; border: 4px solid #2e1a0b; border-top: 0; border-radius: 0 0 10px 10px; }
+.bancada__frente i { height: 34px; border-radius: 4px; background: #7a4a22; box-shadow: inset 0 0 0 3px #8a5526; position: relative; }
+.bancada__frente i::after { content: ""; position: absolute; left: 50%; top: 10px; width: 22px; height: 5px; margin-left: -11px; border-radius: 3px; background: #d9a35a; }
 .chip-ingrediente {
   min-height: 2.5rem; padding: 0.3rem 0.65rem 0.3rem 0.35rem; gap: 0.4rem;
   background: var(--casco); color: var(--nevoa); border: var(--borda); font-weight: 600; font-size: 0.9rem;
@@ -591,7 +652,7 @@ button.cartao__arte:focus-visible { outline-offset: -4px; }
 .tabua__prazo { position: absolute; left: 10px; right: 10px; bottom: 8px; height: 6px; border-radius: 3px; background: rgba(0, 0, 0, 0.35); overflow: hidden; pointer-events: none; }
 .tabua__prazo-barra { height: 100%; width: 100%; background: var(--ambar); }
 
-/* Misturar: tigela com a massa girando e a colher */
+/* Misturar: a tigela fica parada; a massa é uma pixel art que a colher vai borrando até ficar lisa */
 .tigela {
   position: relative; width: min(260px, 80vw); aspect-ratio: 1; justify-self: center; border-radius: 50%; touch-action: none; cursor: grab;
   background: radial-gradient(circle, #3b6fb0 0 64%, #29507f 64% 70%, #1d3b5f 70% 100%);
@@ -599,18 +660,24 @@ button.cartao__arte:focus-visible { outline-offset: -4px; }
 }
 .tigela:active { cursor: grabbing; }
 .tigela__massa {
-  position: absolute; inset: 14%; border-radius: 50%;
-  background: repeating-conic-gradient(from 0deg, #e8c27a 0 18deg, #f2d494 18deg 36deg);
+  position: absolute; inset: 14%; width: 72%; height: 72%; border-radius: 50%; image-rendering: pixelated;
+  box-shadow: inset 0 6px 10px rgba(0, 0, 0, 0.28);
 }
-.tigela__grumos {
-  position: absolute; inset: 14%; border-radius: 50%; pointer-events: none;
-  background: radial-gradient(circle at 30% 35%, #b98b3e 0 7px, transparent 8px), radial-gradient(circle at 60% 58%, #b98b3e 0 9px, transparent 10px),
-    radial-gradient(circle at 72% 28%, #b98b3e 0 6px, transparent 7px), radial-gradient(circle at 40% 72%, #b98b3e 0 8px, transparent 9px);
-  transition: opacity 0.2s;
-}
-.tigela__colher { position: absolute; inset: 0; pointer-events: none; }
-.tigela__colher .pixel { position: absolute; top: 6%; left: 50%; width: 80px; height: 80px; margin-left: -10px; transform: rotate(45deg); filter: drop-shadow(0 4px 0 rgba(0, 0, 0, 0.35)); }
-.tigela__colher.is-segurando .pixel { filter: drop-shadow(0 8px 2px rgba(0, 0, 0, 0.45)); }
+.tigela__massa.is-pronta { animation: massa-pronta 0.6s ease-out; }
+@keyframes massa-pronta { 40% { filter: brightness(1.18); transform: scale(1.03); } }
+.tigela__colher { position: absolute; left: 0; top: 0; width: 0; height: 0; pointer-events: none; transition: transform 0.06s linear; }
+/* a concha (72%, 22% do desenho) fica na ponta do dedo */
+.tigela__colher .pixel { position: absolute; left: -57px; top: -18px; width: 80px; height: 80px; transform-origin: 57px 18px; filter: drop-shadow(0 4px 0 rgba(0, 0, 0, 0.35)); }
+.tigela__colher.is-segurando .pixel { filter: drop-shadow(0 8px 2px rgba(0, 0, 0, 0.45)); transform: scale(1.06); }
+/* Montar: a ficha da Vó com a ordem das camadas */
+.ficha { border: 2px dashed var(--mare); border-radius: 12px; padding: 10px 12px; background: rgba(var(--mare-rgb, 120, 240, 250), 0.06); transition: opacity 0.4s, max-height 0.4s; max-height: 600px; overflow: hidden; }
+.ficha__titulo { margin: 0 0 6px; font-size: 0.85rem; font-weight: 700; opacity: 0.8; }
+.ficha__lista { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px; }
+.ficha__linha { display: flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 8px; font-size: 0.82rem; background: rgba(255, 255, 255, 0.05); }
+.ficha__num { font-weight: 700; opacity: 0.6; }
+.ficha__linha.is-feita { opacity: 0.4; text-decoration: line-through; }
+.ficha__linha.is-agora { background: var(--mare); color: var(--abismo, #10154a); font-weight: 700; }
+.ficha.is-guardada { opacity: 0; max-height: 0; padding: 0; border-width: 0; }
 .medidor { height: 14px; border-radius: 7px; background: var(--casco-2); overflow: hidden; }
 .medidor__nivel { height: 100%; width: 0; background: var(--mare); transition: width 0.12s; }
 
@@ -848,7 +915,9 @@ button.cartao__arte:focus-visible { outline-offset: -4px; }
   .cozinheiro__nome { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.9rem; }
   .menu { order: 3; width: 100%; margin: 0; justify-content: space-between; }
   .menu a { flex: 1; text-align: center; padding-inline: 0.5rem; }
-  .campo-dupla, .passo__campos, .montagem, .foto-propria, .zonas { grid-template-columns: 1fr; }
+  .campo-dupla, .passo__campos, .montagem, .foto-propria { grid-template-columns: 1fr; }
+  .item-despensa { width: 80px; }
+  .bancada__tampo::before { width: 70px; height: 50px; }
   .tabua { height: 160px; }
   .passo { flex-wrap: wrap; }
   .passo__campos { flex-basis: 100%; order: 3; }

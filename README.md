@@ -38,13 +38,13 @@ Os jogos são de mexer nos instrumentos com o dedo ou o mouse. Todos também fun
 
 | Jogo | Ação da receita | Como joga (toque) | Teclado |
 | --- | --- | --- | --- |
-| Separar | separar, escolher | arrastar os ingredientes do passo da despensa para a bancada (ou tocar) | Tab e Enter |
+| Separar | separar, escolher | arrastar da despensa (prateleiras com cada ingrediente no seu ícone) para a bancada, ou tocar. O primeiro Separar da aula pede **todos** os ingredientes da receita; os seguintes, só os do passo | Tab e Enter |
 | Cortar | cortar, picar, fatiar | segurar a faca, levar até a marca e soltar; cada marca tem prazo | ← → e espaço |
-| Misturar | bater, mexer, sovar | girar a colher em volta da tigela, sempre para o mesmo lado, sem respingar | ← e → alternados |
+| Misturar | bater, mexer, sovar | só a colher anda: ela segue o dedo e arrasta a massa (pixel art com as cores dos ingredientes do passo), que vai se misturando até ficar lisa. Sempre para o mesmo lado, sem respingar | ← e → alternados |
 | Medir | despejar na medida | arrastar a jarra para inclinar; soltar endireita (ainda escorre um pouco) | segurar espaço |
 | Fogo | ferver, fritar, refogar | girar o botão do fogão; a panela demora a responder e há imprevistos | ↑ e ↓ |
 | Forno | assar, tostar | puxar a pá para baixo quando a cor chega no dourado | espaço |
-| Montar | montar camadas, empratar | arrastar as camadas para o prato na ordem, de baixo para cima (ou tocar) | Tab e Enter |
+| Montar | montar camadas, empratar | arrastar as camadas para o prato seguindo a **ficha da Vó** (a ordem, com a próxima em destaque), ou tocar. No difícil a ficha some depois de uns segundos | Tab e Enter |
 
 Cada jogo mostra uma **dica da Vó** antes de começar e de 0 a 3 **estrelas** no fim. O site guarda o **recorde** de cada receita neste navegador.
 

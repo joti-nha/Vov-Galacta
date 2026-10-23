@@ -66,13 +66,13 @@ function particulas(alvo, x, y, cor, quantas) {
 }
 
 const DICAS = {
-  separar: 'Leia o passo com calma: só vai para a bancada o que ele pede.',
+  separar: 'No primeiro Separar vai tudo da receita; nos outros, só o que o passo pede. Cuidado com o que não é do prato.',
   cortar: 'Não precisa correr: leve a faca devagar e solte em cima da marca.',
   misturar: 'Círculos largos e constantes. Mexer rápido demais só respinga.',
   medir: 'Comece a fechar a jarra antes da linha: o leite ainda escorre.',
   fogo: 'A panela demora a responder. Mexa no botão antes de precisar.',
   forno: 'A cor acelera no final. Fique com a pá pronta.',
-  montar: 'De baixo para cima, como a receita manda.'
+  montar: 'Siga a ficha da Vó, de baixo para cima. No difícil ela guarda a ficha depois de uns segundos.'
 };
 
 // abertura de cada passo: o que a receita pede, como jogar, a dica e o botão de começar
@@ -205,7 +205,11 @@ function chipDeIngrediente(nome) {
 /* ---------- Separar: levar os ingredientes do passo para a bancada ---------- */
 
 function jogoSeparar(area, receita, passo, sinal) {
-  const certos = (lista(passo.itens).length ? lista(passo.itens) : receita.ingredientes.map((i) => i.nome)).slice(0, 8);
+  // o primeiro Separar da aula é a mise en place: vai tudo da receita para a bancada. Os seguintes pedem só os itens deles.
+  const passos = receita.passos || [];
+  const primeiro = passos.includes(passo) && passos.find((p) => p.jogo === 'separar') === passo; // no treino vale o que o passo diz
+  const todos = receita.ingredientes.map((i) => i.nome);
+  const certos = primeiro || !lista(passo.itens).length ? todos : lista(passo.itens);
   const naReceita = new Set(receita.ingredientes.map((i) => chaveTexto(i.nome)).concat(certos.map(chaveTexto)));
   const falsos = embaralhar(DESPENSA.filter((n) => !naReceita.has(chaveTexto(n))))
     .slice(0, Math.max(2, 9 - certos.length + porNivel(passo, [-2, 0, 3])))
@@ -217,33 +221,49 @@ function jogoSeparar(area, receita, passo, sinal) {
     'Arraste os ' + certos.length + ' ingredientes deste passo da despensa para a bancada (ou toque neles). Você tem ' + TEMPO + ' segundos.',
     (resolve) => {
       const tempo = relogio();
-      const despensa = h('div', 'zona zona--despensa', h('p', 'zona__nome', 'Despensa'), h('div', 'zona__itens'));
+      // o armário: prateleiras de madeira com as coisas espalhadas, em pé, cada uma de um jeito
+      const prateleiras = h('div', 'armario__prateleiras');
+      const despensa = h('div', 'armario', h('p', 'armario__placa', 'Despensa da Vó'), prateleiras);
       despensa.dataset.zona = 'despensa';
-      const bancada = h('div', 'zona zona--bancada', h('p', 'zona__nome', 'Bancada'), h('div', 'zona__itens'));
+      const itensDaBancada = h('div', 'bancada__itens');
+      const bancada = h('div', 'bancada',
+        h('div', 'bancada__tampo', h('p', 'bancada__nome', 'Bancada'), itensDaBancada),
+        h('div', 'bancada__frente', h('i'), h('i'), h('i')));
       bancada.dataset.zona = 'bancada';
       const pronto = botao('Pronto, bancada separada', 'botao--principal');
-      const palco = palcoDoJogo(area, 'Separar', passo, tempo.el, h('div', 'zonas', despensa, bancada), h('div', 'jogo__acoes', pronto));
+      const palco = palcoDoJogo(area, 'Separar', passo, tempo.el, h('div', 'cozinha-separar', despensa, bancada), h('div', 'jogo__acoes', pronto));
       let encerrado = false;
 
-      const mover = (chip, zona) => {
-        if (encerrado || !zona || chip.parentElement === zona.lastChild) return;
-        zona.lastChild.append(chip);
-        chip.setAttribute('aria-pressed', String(zona === bancada));
-        chip.classList.remove('is-caiu');
-        void chip.offsetWidth;
-        chip.classList.add('is-caiu');
+      // quantas coisas cabem por prateleira depende da largura da tela
+      const porPrateleira = limitar(Math.floor((palco.clientWidth - 40) / 92), 3, 6);
+      const linhas = Array.from({ length: Math.ceil(opcoes.length / porPrateleira) }, () => h('div', 'prateleira__itens'));
+      linhas.forEach((l) => prateleiras.append(h('div', 'prateleira', l)));
+
+      const mover = (item, zona) => {
+        if (encerrado || !zona) return;
+        const destino = zona === bancada ? itensDaBancada : item.casa;
+        if (item.parentElement === destino) return;
+        destino.append(item);
+        item.setAttribute('aria-pressed', String(zona === bancada));
+        item.classList.remove('is-caiu');
+        void item.offsetWidth;
+        item.classList.add('is-caiu');
         vibrar(15);
       };
-      const chips = opcoes.map((nome) => {
-        const chip = chipDeIngrediente(nome);
-        chip.dataset.nome = nome;
-        chip.setAttribute('aria-pressed', 'false');
-        ingredienteArrastavel(chip, {
-          soltar: (zona) => mover(chip, zona),
-          tocar: () => mover(chip, chip.closest('[data-zona]') === bancada ? despensa : bancada)
+      const chips = opcoes.map((nome, i) => {
+        const item = botao('', 'item-despensa', null, iconeIngrediente(nome, 44), h('span', 'item-despensa__nome', nome));
+        item.dataset.nome = nome;
+        item.setAttribute('aria-pressed', 'false');
+        // um pouco torto e em alturas diferentes, como numa despensa de verdade
+        item.style.setProperty('--inclina', (Math.random() * 8 - 4).toFixed(1) + 'deg');
+        item.style.setProperty('--recuo', Math.round(Math.random() * 6) + 'px');
+        item.casa = linhas[Math.floor(i / porPrateleira)];
+        ingredienteArrastavel(item, {
+          soltar: (zona) => mover(item, zona),
+          tocar: () => mover(item, item.closest('[data-zona]') === bancada ? despensa : bancada)
         });
-        despensa.lastChild.append(chip);
-        return chip;
+        item.casa.append(item);
+        return item;
       });
       chips[0].focus();
 
@@ -397,21 +417,43 @@ function jogoCortar(area, receita, passo, sinal) {
 
 /* ---------- Misturar: girar a colher na tigela ---------- */
 
+// cores da massa: a cor principal de cada ingrediente do passo (ou da receita, se o passo não disser)
+function coresDaMassa(receita, passo) {
+  let nomes = lista(passo.itens);
+  if (!nomes.length) nomes = receita.ingredientes.map((x) => x.nome);
+  const cores = [];
+  nomes.slice(0, 6).forEach((nome) => {
+    const s = spriteDoIngrediente(nome);
+    const conta = {};
+    s.linhas.join('').split('').forEach((l) => { if (l !== '.' && l !== 'K' && s.cores[l]) conta[l] = (conta[l] || 0) + 1; });
+    const letra = Object.keys(conta).sort((x, y) => conta[y] - conta[x])[0];
+    if (letra) cores.push(s.cores[letra]);
+  });
+  if (cores.length < 2) cores.push('#f4ead2', '#f2c14e');
+  return cores.map((c) => {
+    const n = parseInt(c.replace('#', '').replace(/^(.)(.)(.)$/, '$1$1$2$2$3$3'), 16);
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  });
+}
+
 function jogoMisturar(area, receita, passo, sinal) {
   const LIMITE = porNivel(passo, [20, 16, 12]);
   const VOLTAS = porNivel(passo, [3, 4, 5]);
   const RAPIDO = porNivel(passo, [16, 13, 10]); // radianos por segundo: acima disso respinga
   const IDEAL = porNivel(passo, [10, 9, 8]); // segundos para terminar sem perder ponto
+  const N = 40; // a massa é uma pixel art de 40 x 40 que a colher vai arrastando
 
   return abrirJogo(area, 'Misturar', passo,
-    'Segure a colher e gire em volta da tigela, sempre para o mesmo lado. São ' + VOLTAS + ' voltas; girar rápido demais respinga. No teclado, alterne ← e →.',
+    'Segure a colher e mexa a massa em círculos, sempre para o mesmo lado: a tigela fica parada e só a colher anda. São ' + VOLTAS + ' voltas; mexer rápido demais respinga. No teclado, alterne ← e →.',
     (resolve) => {
-      const massa = h('div', 'tigela__massa');
-      const grumos = h('div', 'tigela__grumos');
+      const tela = h('canvas', 'tigela__massa');
+      tela.width = N;
+      tela.height = N;
+      const ctx = tela.getContext('2d');
       const colher = h('div', 'tigela__colher', instrumento('colher', 80));
-      const tigela = h('div', 'tigela', massa, grumos, colher);
+      const tigela = h('div', 'tigela', tela, colher);
       tigela.tabIndex = 0;
-      tigela.setAttribute('aria-label', 'Tigela: gire a colher ou use as setas');
+      tigela.setAttribute('aria-label', 'Tigela: mexa a colher em círculos ou use as setas');
       const barra = h('div', 'medidor', h('div', 'medidor__nivel'));
       barra.setAttribute('role', 'progressbar');
       barra.setAttribute('aria-label', 'Ponto da mistura');
@@ -422,26 +464,99 @@ function jogoMisturar(area, receita, passo, sinal) {
       const palco = palcoDoJogo(area, 'Misturar', passo, tempo.el, tigela, barra, retorno);
       tigela.focus();
 
+      /* A massa: cada pixel guarda a cor dele. Começa com os ingredientes em manchas separadas e grumos; a colher
+         arrasta a cor por onde passa (como um borrão) e, conforme as voltas, tudo puxa para a cor final, lisa. */
+      const cores = coresDaMassa(receita, passo);
+      const R = new Float32Array(N * N), G = new Float32Array(N * N), B = new Float32Array(N * N), grao = new Float32Array(N * N);
+      const dentro = new Uint8Array(N * N);
+      const meio = (N - 1) / 2;
+      for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+        const k = y * N + x;
+        dentro[k] = Math.hypot(x - meio, y - meio) <= N / 2 - 0.3 ? 1 : 0;
+        [R[k], G[k], B[k]] = cores[0];
+        grao[k] = (Math.random() - 0.5) * 0.16;
+      }
+      for (let m = 0; m < 14; m++) { // manchas de cada ingrediente
+        const c = cores[1 + (m % (cores.length - 1))];
+        const cx = 6 + Math.random() * (N - 12), cy = 6 + Math.random() * (N - 12), raio = 2.5 + Math.random() * 4;
+        for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+          const d = Math.hypot(x - cx, y - cy) + (Math.random() - 0.5) * 1.2;
+          if (d < raio) { const k = y * N + x; [R[k], G[k], B[k]] = c; }
+        }
+      }
+      for (let g = 0; g < 9; g++) { // grumos: pontinhos escuros que somem com a mistura
+        const x = Math.round(8 + Math.random() * (N - 16)), y = Math.round(8 + Math.random() * (N - 16));
+        [[0, 0], [1, 0], [0, 1], [1, 1]].forEach(([a, b]) => { grao[(y + b) * N + x + a] -= 0.35; });
+      }
+      let alvo = [0, 0, 0], total = 0;
+      for (let k = 0; k < N * N; k++) if (dentro[k]) { alvo[0] += R[k]; alvo[1] += G[k]; alvo[2] += B[k]; total++; }
+      alvo = alvo.map((v) => v / total);
+      const imagem = ctx.createImageData(N, N);
+
+      function pintarMassa(p) {
+        const liga = Math.pow(p / 100, 1.4); // quanto já puxou para a cor final
+        const textura = 1 - p / 100;
+        const d = imagem.data;
+        for (let k = 0; k < N * N; k++) {
+          const o = k * 4;
+          if (!dentro[k]) { d[o + 3] = 0; continue; }
+          const luz = 1 + grao[k] * textura;
+          d[o] = (R[k] + (alvo[0] - R[k]) * liga) * luz;
+          d[o + 1] = (G[k] + (alvo[1] - G[k]) * liga) * luz;
+          d[o + 2] = (B[k] + (alvo[2] - B[k]) * liga) * luz;
+          d[o + 3] = 255;
+        }
+        ctx.putImageData(imagem, 0, 0);
+      }
+
+      // a colher passando: carrega um pouco da cor de onde está e deixa no caminho (o redemoinho)
+      let carga = null;
+      function borrar(gx, gy) {
+        const raio = 3.4;
+        if (!carga) carga = [R[Math.round(gy) * N + Math.round(gx)] || alvo[0], G[Math.round(gy) * N + Math.round(gx)] || alvo[1], B[Math.round(gy) * N + Math.round(gx)] || alvo[2]];
+        for (let y = Math.max(0, Math.floor(gy - raio)); y <= Math.min(N - 1, Math.ceil(gy + raio)); y++) {
+          for (let x = Math.max(0, Math.floor(gx - raio)); x <= Math.min(N - 1, Math.ceil(gx + raio)); x++) {
+            const k = y * N + x;
+            const d = Math.hypot(x - gx, y - gy);
+            if (!dentro[k] || d > raio) continue;
+            const f = 0.55 * (1 - d / raio);
+            const r = R[k], g = G[k], b = B[k];
+            R[k] += (carga[0] - r) * f; G[k] += (carga[1] - g) * f; B[k] += (carga[2] - b) * f;
+            carga[0] += (r - carga[0]) * f * 0.35; carga[1] += (g - carga[1]) * f * 0.35; carga[2] += (b - carga[2]) * f * 0.35;
+            grao[k] *= 0.97; // o grumo esmaga onde a colher passa
+          }
+        }
+      }
+
       let acumulado = 0;
       let sentido = 0;
       let anguloAnterior = null;
       let ultimoMovimento = performance.now();
+      let ponta = null; // onde está a concha da colher, em pixels da massa
       let respingos = 0;
       let calmaAte = 0;
       let segundos = 0;
       let acabou = false;
       let ladoTeclado = '';
       let ultimaTecla = 0;
+      let giroDaColher = 0;
 
       const progresso = () => Math.min(100, (acumulado / (VOLTAS * Math.PI * 2)) * 100);
 
-      function desenhar(angulo) {
+      // a colher segue o dedo, com o cabo sempre apontando para fora da tigela
+      function porColher(gx, gy) {
+        const t = tela.getBoundingClientRect(), b = tigela.getBoundingClientRect();
+        const x = t.left - b.left + ((gx + 0.5) / N) * t.width, y = t.top - b.top + ((gy + 0.5) / N) * t.height;
+        const dx = gx - meio, dy = gy - meio;
+        if (Math.hypot(dx, dy) > 2) giroDaColher = Math.atan2(dy, dx) - (134 * Math.PI) / 180;
+        colher.style.transform = 'translate(' + x + 'px, ' + y + 'px) rotate(' + giroDaColher + 'rad)';
+      }
+
+      function desenhar() {
         const p = progresso();
         barra.firstChild.style.width = p + '%';
         barra.setAttribute('aria-valuenow', String(Math.round(p)));
-        grumos.style.opacity = String(1 - p / 100);
-        massa.style.transform = 'rotate(' + acumulado + 'rad)';
-        if (angulo !== undefined) colher.style.transform = 'rotate(' + angulo + 'rad)';
+        pintarMassa(p);
         if (p >= 100) terminar(true);
       }
 
@@ -451,55 +566,87 @@ function jogoMisturar(area, receita, passo, sinal) {
         calmaAte = agora + 400;
         respingos++;
         mostrarRetorno(retorno, 'Devagar, está respingando!', 'ruim');
-        particulas(tigela, tigela.clientWidth / 2, tigela.clientHeight / 2, '#e8c27a', 10);
+        const c = alvo.map((v) => Math.round(v)).join(',');
+        const t = tela.getBoundingClientRect(), b = tigela.getBoundingClientRect();
+        const px = ponta ? t.left - b.left + (ponta[0] / N) * t.width : tigela.clientWidth / 2;
+        const py = ponta ? t.top - b.top + (ponta[1] / N) * t.height : tigela.clientHeight / 2;
+        particulas(tigela, px, py, 'rgb(' + c + ')', 10);
         vibrar(50);
       }
 
-      function girar(angulo) {
+      // move a ponta da colher até (gx, gy), borrando a massa no caminho e contando o quanto girou em volta do meio
+      function moverPonta(gx, gy) {
         if (acabou) return;
+        const dx = gx - meio, dy = gy - meio, dist = Math.hypot(dx, dy), max = N / 2 - 3.5;
+        if (dist > max) { gx = meio + (dx / dist) * max; gy = meio + (dy / dist) * max; }
         const agora = performance.now();
-        if (anguloAnterior !== null) {
-          let da = angulo - anguloAnterior;
-          if (da > Math.PI) da -= Math.PI * 2;
-          if (da < -Math.PI) da += Math.PI * 2;
-          const dt = Math.max(0.016, (agora - ultimoMovimento) / 1000);
-          if (!sentido && Math.abs(da) > 0.05) sentido = Math.sign(da);
-          if (sentido && Math.sign(da) === sentido) {
-            const rapido = Math.abs(da) / dt > RAPIDO;
-            if (rapido) respingar();
-            acumulado += Math.abs(da) * (rapido ? 0.3 : 1);
-          } else if (sentido && Math.abs(da) > 0.08) {
-            mostrarRetorno(retorno, 'Para o outro lado!', 'ruim');
+        if (ponta) {
+          const passos = Math.max(1, Math.ceil(Math.hypot(gx - ponta[0], gy - ponta[1])));
+          for (let s = 1; s <= passos; s++) borrar(ponta[0] + ((gx - ponta[0]) * s) / passos, ponta[1] + ((gy - ponta[1]) * s) / passos);
+        } else borrar(gx, gy);
+        ponta = [gx, gy];
+        porColher(gx, gy);
+        if (Math.hypot(gx - meio, gy - meio) > N * 0.12) { // no miolo da tigela o ângulo não conta (pula demais)
+          const angulo = Math.atan2(gy - meio, gx - meio);
+          if (anguloAnterior !== null) {
+            let da = angulo - anguloAnterior;
+            if (da > Math.PI) da -= Math.PI * 2;
+            if (da < -Math.PI) da += Math.PI * 2;
+            const dt = Math.max(0.016, (agora - ultimoMovimento) / 1000);
+            if (!sentido && Math.abs(da) > 0.05) sentido = Math.sign(da);
+            if (sentido && Math.sign(da) === sentido) {
+              const rapido = Math.abs(da) / dt > RAPIDO;
+              if (rapido) respingar();
+              acumulado += Math.abs(da) * (rapido ? 0.3 : 1);
+            } else if (sentido && Math.abs(da) > 0.08) {
+              mostrarRetorno(retorno, 'Para o outro lado!', 'ruim');
+            }
           }
+          anguloAnterior = angulo;
+          ultimoMovimento = agora;
         }
-        anguloAnterior = angulo;
-        ultimoMovimento = agora;
-        desenhar(angulo);
+        desenhar();
       }
 
-      const anguloNaTigela = (ev) => {
-        const r = tigela.getBoundingClientRect();
-        return Math.atan2(ev.clientY - (r.top + r.height / 2), ev.clientX - (r.left + r.width / 2));
+      const pontoNaMassa = (ev) => {
+        const t = tela.getBoundingClientRect();
+        return [((ev.clientX - t.left) / t.width) * N - 0.5, ((ev.clientY - t.top) / t.height) * N - 0.5];
       };
       arrastar(tigela, {
-        comecar: (ev) => { anguloAnterior = null; colher.classList.add('is-segurando'); girar(anguloNaTigela(ev)); },
-        mover: (ev) => girar(anguloNaTigela(ev)),
+        comecar: (ev) => {
+          anguloAnterior = null;
+          carga = null;
+          ponta = null;
+          colher.classList.add('is-segurando');
+          moverPonta(...pontoNaMassa(ev));
+        },
+        mover: (ev) => moverPonta(...pontoNaMassa(ev)),
         soltar: () => colher.classList.remove('is-segurando')
       });
 
-      // teclado: cada troca de lado vale um quarto de volta
+      // teclado: cada troca de lado leva a colher um quarto de volta adiante, passando pela massa
+      let quarto = 0;
       function teclado(ev) {
         if (ev.repeat || acabou) return;
         const lado = tecla(ev, 'ArrowLeft', 'KeyA') ? 'esq' : tecla(ev, 'ArrowRight', 'KeyD') ? 'dir' : '';
         if (!lado) return;
         ev.preventDefault();
         const agora = performance.now();
-        if (lado === ladoTeclado) mostrarRetorno(retorno, 'Para o outro lado!', 'ruim');
-        else if (ultimaTecla && agora - ultimaTecla < 110) { respingar(); acumulado += Math.PI / 8; }
-        else acumulado += Math.PI / 2;
+        if (lado === ladoTeclado) { mostrarRetorno(retorno, 'Para o outro lado!', 'ruim'); return; }
+        const rapido = ultimaTecla && agora - ultimaTecla < 110;
         ladoTeclado = lado;
         ultimaTecla = agora;
-        desenhar(lado === 'esq' ? Math.PI : 0);
+        const de = (quarto * Math.PI) / 2, raio = N * 0.3;
+        quarto++;
+        for (let s = 1; s <= 8; s++) { // desenha o arco do quarto de volta
+          const a = de + ((Math.PI / 2) * s) / 8;
+          const gx = meio + Math.cos(a) * raio, gy = meio + Math.sin(a) * raio;
+          if (ponta) borrar(gx, gy);
+          ponta = [gx, gy];
+        }
+        porColher(ponta[0], ponta[1]);
+        if (rapido) { respingar(); acumulado += Math.PI / 8; } else acumulado += Math.PI / 2;
+        desenhar();
       }
 
       function terminar(lisa) {
@@ -511,7 +658,10 @@ function jogoMisturar(area, receita, passo, sinal) {
           : limitar(Math.round(progresso() * 0.6 - respingos * 8), 0, 100);
         const texto = (lisa ? 'Mistura lisa em ' + segundos.toFixed(1) + ' s' : 'O tempo acabou com a mistura empelotada')
           + (respingos ? ', com ' + respingos + (respingos === 1 ? ' respingo.' : ' respingos.') : ', sem um respingo.');
-        if (lisa) particulas(tigela, tigela.clientWidth / 2, tigela.clientHeight / 2, '#f6c978', 12);
+        if (lisa) {
+          tela.classList.add('is-pronta');
+          particulas(tigela, tigela.clientWidth / 2, tigela.clientHeight / 2, '#f6c978', 12);
+        }
         fimDeJogo(palco, texto, nota, resolve);
       }
 
@@ -529,7 +679,8 @@ function jogoMisturar(area, receita, passo, sinal) {
 
       document.addEventListener('keydown', teclado);
       sinal.addEventListener('abort', parar, { once: true });
-      desenhar(-Math.PI / 2);
+      pintarMassa(0);
+      requestAnimationFrame(() => { ponta = [meio, meio - N * 0.3]; porColher(ponta[0], ponta[1]); });
     });
 }
 
@@ -896,7 +1047,13 @@ function jogoMontar(area, receita, passo, sinal) {
       const pecas = h('div', 'zona zona--pecas', h('p', 'zona__nome', 'Camadas'), h('div', 'zona__itens'));
       pecas.dataset.zona = 'pecas';
       const retorno = retornoVivo();
-      const palco = palcoDoJogo(area, 'Montar', passo, h('div', 'montagem', prato, pecas), retorno);
+      // a ficha da Vó: a ordem das camadas, de baixo (1) para cima. Marca o que já foi e destaca a próxima.
+      // No difícil a Vó mostra a ficha por uns segundos e depois guarda: aí é de cabeça.
+      const linhasDaFicha = camadas.map((nome, i) => h('li', 'ficha__linha', h('span', 'ficha__num', String(i + 1)), iconeIngrediente(nome, 16), h('span', '', nome)));
+      const listaDaFicha = h('ol', 'ficha__lista', ...linhasDaFicha);
+      const ficha = h('div', 'ficha', h('p', 'ficha__titulo', 'Ficha da Vó · do prato (1) até o topo'), listaDaFicha);
+      const marcarFicha = () => linhasDaFicha.forEach((l, i) => { l.classList.toggle('is-feita', i < feitas); l.classList.toggle('is-agora', i === feitas); });
+      const palco = palcoDoJogo(area, 'Montar', passo, ficha, h('div', 'montagem', prato, pecas), retorno);
       let feitas = 0;
       let erros = 0;
       let acabou = false;
@@ -908,7 +1065,8 @@ function jogoMontar(area, receita, passo, sinal) {
           chip.classList.add('is-usado');
           pilha.append(h('li', 'pilha__camada', iconeIngrediente(nome, 20), h('span', '', nome)));
           feitas++;
-          mostrarRetorno(retorno, feitas < camadas.length ? 'Agora: a próxima camada' : '', 'bom');
+          marcarFicha();
+          mostrarRetorno(retorno, feitas < camadas.length ? 'Isso! Agora: a próxima camada' : '', 'bom');
           vibrar(15);
           if (feitas === camadas.length) {
             acabou = true;
@@ -937,14 +1095,21 @@ function jogoMontar(area, receita, passo, sinal) {
         return chip;
       });
       chips[0].focus();
-      sinal.addEventListener('abort', () => { acabou = true; }, { once: true });
+      marcarFicha();
+      let guardar = 0;
+      if (nivelDo(passo).id === 'dificil') {
+        const segundos = Math.max(5, Math.round(camadas.length * 0.8));
+        mostrarRetorno(retorno, 'Decore a ficha: a Vó guarda em ' + segundos + ' segundos.', 'bom');
+        guardar = setTimeout(() => { if (!acabou) { ficha.classList.add('is-guardada'); mostrarRetorno(retorno, 'A Vó guardou a ficha. Agora é de cabeça!', 'bom'); } }, segundos * 1000);
+      }
+      sinal.addEventListener('abort', () => { acabou = true; clearTimeout(guardar); }, { once: true });
     });
 }
 
 /* ---------- Catálogo (usado pela cozinha e pelo cadastro) ---------- */
 
 const JOGOS = {
-  separar: { nome: 'Separar', faz: 'Separar ingredientes', descricao: 'Arrastar os ingredientes do passo da despensa para a bancada, contra o relógio.', detalhe: 'Ingredientes deste passo, separados por vírgula (vazio = todos)', jogar: jogoSeparar },
+  separar: { nome: 'Separar', faz: 'Separar ingredientes', descricao: 'Arrastar os ingredientes do passo da despensa para a bancada, contra o relógio.', detalhe: 'Ingredientes deste passo, separados por vírgula (o primeiro Separar da aula sempre pede todos)', jogar: jogoSeparar },
   cortar: { nome: 'Cortar', faz: 'Cortar, picar, fatiar', descricao: 'Segurar a faca, mirar na marca e soltar para cortar antes que ela suma.', detalhe: 'O que vai na tábua (ex.: a cebola)', jogar: jogoCortar },
   misturar: { nome: 'Misturar', faz: 'Bater, mexer, sovar', descricao: 'Girar a colher em volta da tigela, sempre para o mesmo lado, sem respingar.', detalhe: '', jogar: jogoMisturar },
   medir: { nome: 'Medir', faz: 'Despejar na medida', descricao: 'Inclinar a jarra para despejar e endireitar na hora certa para parar na linha.', detalhe: 'O que despejar (ex.: 300 ml de leite)', jogar: jogoMedir },
