@@ -405,6 +405,10 @@ button.cartao__arte:focus-visible { outline-offset: -4px; }
 .dialogo__corpo > div[id] { display: grid; gap: 1rem; }
 .dialogo__corpo > div[hidden] { display: none; }
 .dialogo__topo { display: flex; align-items: start; justify-content: space-between; gap: 1rem; }
+.dialogo__topo h2 { min-width: 0; overflow-wrap: anywhere; }
+.dialogo__topo .fechar { flex: none; }
+.dialogo__corpo > *, .receita > * { min-width: 0; }
+.receita__ingredientes li > .medida { text-align: right; }
 .dialogo__topo h2 { font-size: clamp(1.6rem, 1.2rem + 1.5vw, 2.25rem); }
 .dialogo__texto { color: var(--nevoa-2); }
 .fechar {
@@ -674,14 +678,14 @@ button.cartao__arte:focus-visible { outline-offset: -4px; }
 .tigela__colher .pixel { position: absolute; left: -57px; top: -18px; width: 80px; height: 80px; transform-origin: 57px 18px; filter: drop-shadow(0 4px 0 rgba(0, 0, 0, 0.35)); }
 .tigela__colher.is-segurando .pixel { filter: drop-shadow(0 8px 2px rgba(0, 0, 0, 0.45)); transform: scale(1.06); }
 /* Montar: a ficha da Vó com a ordem das camadas */
-.ficha { border: 2px dashed var(--mare); border-radius: 12px; padding: 10px 12px; background: rgba(var(--mare-rgb, 120, 240, 250), 0.06); transition: opacity 0.4s, max-height 0.4s; max-height: 600px; overflow: hidden; }
-.ficha__titulo { margin: 0 0 6px; font-size: 0.85rem; font-weight: 700; opacity: 0.8; }
-.ficha__lista { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px; }
-.ficha__linha { display: flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 8px; font-size: 0.82rem; background: rgba(255, 255, 255, 0.05); }
-.ficha__num { font-weight: 700; opacity: 0.6; }
-.ficha__linha.is-feita { opacity: 0.4; text-decoration: line-through; }
-.ficha__linha.is-agora { background: var(--mare); color: var(--abismo, #10154a); font-weight: 700; }
-.ficha.is-guardada { opacity: 0; max-height: 0; padding: 0; border-width: 0; }
+.ficha-vo { border: 2px dashed var(--mare); border-radius: 12px; padding: 10px 12px; background: rgba(var(--mare-rgb, 120, 240, 250), 0.06); transition: opacity 0.4s, max-height 0.4s; max-height: 600px; overflow: hidden; }
+.ficha-vo__titulo { margin: 0 0 6px; font-size: 0.85rem; font-weight: 700; opacity: 0.8; }
+.ficha-vo__lista { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px; }
+.ficha-vo__linha { display: flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 8px; font-size: 0.82rem; background: rgba(255, 255, 255, 0.05); }
+.ficha-vo__num { font-weight: 700; opacity: 0.6; }
+.ficha-vo__linha.is-feita { opacity: 0.4; text-decoration: line-through; }
+.ficha-vo__linha.is-agora { background: var(--mare); color: var(--abismo, #10154a); font-weight: 700; }
+.ficha-vo.is-guardada { opacity: 0; max-height: 0; padding: 0; border-width: 0; }
 .medidor { height: 14px; border-radius: 7px; background: var(--casco-2); overflow: hidden; }
 .medidor__nivel { height: 100%; width: 0; background: var(--mare); transition: width 0.12s; }
 
@@ -961,9 +965,13 @@ button.cartao__arte:focus-visible { outline-offset: -4px; }
   .pilares, .passos ol { grid-template-columns: 1fr; }
   .cadastro { grid-template-columns: 1fr; }
   .receita { grid-template-columns: 1fr; }
-  .receita__lado { display: grid; grid-template-columns: 140px 1fr; gap: 0 1rem; align-items: start; }
+  /* no celular: a arte encolhe com a tela e os dados ficam empilhados (rótulo pequeno em cima), para nada passar da borda */
+  .receita__lado { display: grid; grid-template-columns: clamp(92px, 30vw, 140px) minmax(0, 1fr); gap: 0.75rem 1rem; align-items: center; }
   .receita__lado .receita__acao { grid-column: 1 / -1; }
-  .receita__fatos { margin-top: 0; }
+  .receita__fatos { margin: 0; grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .receita__fatos dt { font-size: 0.78rem; line-height: 1.2; }
+  .receita__fatos dd { margin-bottom: 0.45rem; line-height: 1.25; overflow-wrap: anywhere; }
+  .receita__fatos dd:last-child { margin-bottom: 0; }
 }
 
 @media (max-width: 720px) {

@@ -1066,9 +1066,9 @@ function jogoMontar(area, receita, passo, sinal) {
       const retorno = retornoVivo();
       // a ficha da Vó: a ordem das camadas, de baixo (1) para cima. Marca o que já foi e destaca a próxima.
       // No difícil a Vó mostra a ficha por uns segundos e depois guarda: aí é de cabeça.
-      const linhasDaFicha = camadas.map((nome, i) => h('li', 'ficha__linha', h('span', 'ficha__num', String(i + 1)), iconeIngrediente(nome, 16), h('span', '', nome)));
-      const listaDaFicha = h('ol', 'ficha__lista', ...linhasDaFicha);
-      const ficha = h('div', 'ficha', h('p', 'ficha__titulo', 'Ficha da Vó · do prato (1) até o topo'), listaDaFicha);
+      const linhasDaFicha = camadas.map((nome, i) => h('li', 'ficha-vo__linha', h('span', 'ficha-vo__num', String(i + 1)), iconeIngrediente(nome, 16), h('span', '', nome)));
+      const listaDaFicha = h('ol', 'ficha-vo__lista', ...linhasDaFicha);
+      const ficha = h('div', 'ficha-vo', h('p', 'ficha-vo__titulo', 'Ficha da Vó · do prato (1) até o topo'), listaDaFicha);
       const marcarFicha = () => linhasDaFicha.forEach((l, i) => { l.classList.toggle('is-feita', i < feitas); l.classList.toggle('is-agora', i === feitas); });
       const palco = palcoDoJogo(area, 'Montar', passo, ficha, h('div', 'montagem', prato, pecas), retorno);
       let feitas = 0;
