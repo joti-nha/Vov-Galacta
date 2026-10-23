@@ -188,7 +188,7 @@ const chaveBusca = (t) => String(t).normalize('NFD').replace(/[\u0300-\u036f]/g,
 
 /* ---------- Inventário ---------- */
 
-// mesmo prato, mesma qualidade e fora das mãos: soma na pilha em vez de criar outro
+// mesmo prato, mesma qualidade e fora das mãos: os pratos novos somam na pilha em vez de criar outro item
 function mesmoPrato(valor, item) {
   const f = valor.mapValue && valor.mapValue.fields;
   if (!f) return false;
@@ -214,7 +214,7 @@ async function gravarNoInventario(fichaId, item) {
     const pilha = itens.find((v) => mesmoPrato(v, item));
     if (pilha) {
       const f = pilha.mapValue.fields;
-      f.qty = paraValor(Math.max(1, Math.round(f.qty ? numero(deValor(f.qty)) : 1)) + 1);
+      f.qty = paraValor(Math.max(1, Math.round(f.qty ? numero(deValor(f.qty)) : 1)) + item.qty);
     } else {
       itens.push(paraValor(item));
     }
@@ -232,7 +232,7 @@ async function gravarNoInventario(fichaId, item) {
           currentDocument: { updateTime: doc.updateTime }
         }]
       });
-      const qtd = pilha ? deValor(pilha.mapValue.fields.qty) : 1;
+      const qtd = pilha ? deValor(pilha.mapValue.fields.qty) : item.qty;
       return { empilhou: Boolean(pilha), quantidade: qtd };
     } catch (e) {
       const conflito = e.status === 400 || e.status === 409 || e.status === 412;

@@ -17,6 +17,19 @@ const FOGOS = {
   alto: { nome: 'fogo alto', faixa: [70, 90] }
 };
 
+// dificuldade de cada passo: muda tempo, faixas e velocidade do jogo, e pesa na nota da aula
+const DIFICULDADES = {
+  facil: { id: 'facil', nome: 'Fácil', i: 0, peso: 0.85 },
+  normal: { id: 'normal', nome: 'Normal', i: 1, peso: 1 },
+  dificil: { id: 'dificil', nome: 'Difícil', i: 2, peso: 1.15 }
+};
+const nivelDo = (passo) => DIFICULDADES[passo.dificuldade] || DIFICULDADES.normal;
+// o valor certo para o nível do passo: porNivel(passo, [fácil, normal, difícil])
+const porNivel = (passo, valores) => valores[nivelDo(passo).i];
+// a nota de um passo difícil vale mais; a de um fácil, menos (no máximo 100)
+const notaComPeso = (nota, passo) => Math.min(100, Math.round(nota * nivelDo(passo).peso));
+const seloNivel = (passo) => h('span', 'nivel nivel--' + nivelDo(passo).id, nivelDo(passo).nome);
+
 const chaveTexto = (t) => String(t).trim().toLowerCase();
 const lista = (v) => (Array.isArray(v) ? v : String(v || '').split(',')).map((x) => String(x).trim()).filter(Boolean);
 const tecla = (ev, ...codigos) => codigos.includes(ev.code) || codigos.includes(ev.key);
@@ -27,7 +40,7 @@ function abrirJogo(area, titulo, passo, comoJogar, iniciar) {
     const comecar = botao('Começar', 'botao--principal', () => iniciar(resolve));
     area.replaceChildren(
       h('div', 'jogo',
-        h('h3', 'jogo__titulo', titulo),
+        h('h3', 'jogo__titulo', titulo, ' ', seloNivel(passo)),
         h('p', 'jogo__passo', passo.texto),
         h('p', 'jogo__instrucao', comoJogar),
         h('div', 'jogo__acoes', comecar)));
@@ -36,7 +49,7 @@ function abrirJogo(area, titulo, passo, comoJogar, iniciar) {
 }
 
 function palcoDoJogo(area, titulo, passo, ...conteudo) {
-  const palco = h('div', 'jogo', h('h3', 'jogo__titulo', titulo), h('p', 'jogo__passo', passo.texto), ...conteudo);
+  const palco = h('div', 'jogo', h('h3', 'jogo__titulo', titulo, ' ', seloNivel(passo)), h('p', 'jogo__passo', passo.texto), ...conteudo);
   area.replaceChildren(palco);
   return palco;
 }
@@ -97,10 +110,10 @@ function jogoSeparar(area, receita, passo, sinal) {
   const certos = (lista(passo.itens).length ? lista(passo.itens) : receita.ingredientes.map((i) => i.nome)).slice(0, 8);
   const naReceita = new Set(receita.ingredientes.map((i) => chaveTexto(i.nome)).concat(certos.map(chaveTexto)));
   const falsos = embaralhar(DESPENSA.filter((n) => !naReceita.has(chaveTexto(n))))
-    .slice(0, Math.max(3, 9 - certos.length))
+    .slice(0, Math.max(2, 9 - certos.length + porNivel(passo, [-2, 0, 3])))
     .concat(embaralhar(DA_GALAXIA).slice(0, 2));
   const opcoes = embaralhar(certos.concat(falsos));
-  const TEMPO = 18 + certos.length * 2;
+  const TEMPO = Math.round((18 + certos.length * 2) * porNivel(passo, [1.5, 1, 0.7]));
 
   return abrirJogo(area, 'Separar', passo,
     'Toque nos ' + certos.length + ' ingredientes deste passo e deixe o resto na despensa. Você tem ' + TEMPO + ' segundos.',
@@ -156,7 +169,7 @@ function jogoSeparar(area, receita, passo, sinal) {
 /* ---------- Cortar: acertar a faca na faixa ---------- */
 
 function jogoCortar(area, receita, passo, sinal) {
-  const CORTES = 5;
+  const CORTES = porNivel(passo, [4, 5, 6]);
   const alvo = passo.alvo || (receita.ingredientes[0] && receita.ingredientes[0].nome) || 'os ingredientes';
 
   return abrirJogo(area, 'Cortar ' + alvo, passo,
@@ -174,12 +187,12 @@ function jogoCortar(area, receita, passo, sinal) {
       const notas = [];
       let pos = 0;
       let sentido = 1;
-      let velocidade = 0.55;
+      let velocidade = porNivel(passo, [0.4, 0.55, 0.75]);
       let centro = 0;
       let largura = 0;
 
       function novaZona() {
-        largura = 0.22 - notas.length * 0.025;
+        largura = Math.max(0.08, porNivel(passo, [0.28, 0.22, 0.17]) - notas.length * 0.025);
         centro = 0.15 + Math.random() * 0.7;
         zona.style.left = ((centro - largura / 2) * 100) + '%';
         zona.style.width = (largura * 100) + '%';
@@ -214,7 +227,7 @@ function jogoCortar(area, receita, passo, sinal) {
           fimDeJogo(palco, perfeitos + (perfeitos === 1 ? ' corte perfeito' : ' cortes perfeitos') + ' em ' + CORTES + '.', media, resolve);
           return;
         }
-        velocidade += 0.14;
+        velocidade += porNivel(passo, [0.1, 0.14, 0.18]);
         placar.textContent = 'Corte ' + (notas.length + 1) + ' de ' + CORTES;
         novaZona();
       }
@@ -240,7 +253,9 @@ function jogoCortar(area, receita, passo, sinal) {
 /* ---------- Misturar: colher para um lado e para o outro, no ritmo ---------- */
 
 function jogoMisturar(area, receita, passo, sinal) {
-  const LIMITE = 15;
+  const LIMITE = porNivel(passo, [18, 15, 11]);
+  const RAPIDO = porNivel(passo, [90, 110, 140]); // menos que isso entre duas mexidas respinga
+  const POR_MEXIDA = porNivel(passo, [7, 6, 5]);
 
   return abrirJogo(area, 'Misturar', passo,
     'Mexa alternando os lados: ← e → no teclado (ou os dois botões). Repetir o mesmo lado ou mexer rápido demais respinga. Deixe a mistura lisa antes de ' + LIMITE + ' segundos.',
@@ -279,12 +294,12 @@ function jogoMisturar(area, receita, passo, sinal) {
         if (novo === lado) {
           respingos++;
           retorno.textContent = 'Para o outro lado!';
-        } else if (ultimo && agora - ultimo < 110) {
+        } else if (ultimo && agora - ultimo < RAPIDO) {
           respingos++;
           progresso += 2;
           retorno.textContent = 'Devagar, está respingando';
         } else {
-          progresso += 6;
+          progresso += POR_MEXIDA;
           retorno.textContent = '';
         }
         lado = novo;
@@ -338,7 +353,9 @@ function jogoMisturar(area, receita, passo, sinal) {
 /* ---------- Medir: despejar até a linha ---------- */
 
 function jogoMedir(area, receita, passo, sinal) {
-  const RODADAS = 2;
+  const RODADAS = porNivel(passo, [2, 2, 3]);
+  const FOLGA = porNivel(passo, [1.5, 1, 0.7]); // quanto pode errar a linha
+  const VAZAO = porNivel(passo, [45, 55, 70]);
   const alvo = passo.alvo || 'o líquido';
 
   return abrirJogo(area, 'Medir ' + alvo, passo,
@@ -383,9 +400,9 @@ function jogoMedir(area, receita, passo, sinal) {
         let nota;
         let texto;
         if (quanto >= 100) { nota = 0; texto = 'Transbordou!'; }
-        else if (d <= 2) { nota = 100; texto = 'Na linha!'; }
-        else if (d <= 5) { nota = 80; texto = 'Quase exato'; }
-        else if (d <= 10) { nota = 50; texto = quanto > meta ? 'Passou um pouco' : 'Faltou um pouco'; }
+        else if (d <= 2 * FOLGA) { nota = 100; texto = 'Na linha!'; }
+        else if (d <= 5 * FOLGA) { nota = 80; texto = 'Quase exato'; }
+        else if (d <= 10 * FOLGA) { nota = 50; texto = quanto > meta ? 'Passou um pouco' : 'Faltou um pouco'; }
         else { nota = limitar(Math.round(40 - d * 2), 0, 40); texto = quanto > meta ? 'Passou muito' : 'Faltou muito'; }
         notas.push(nota);
         retorno.textContent = texto;
@@ -401,7 +418,7 @@ function jogoMedir(area, receita, passo, sinal) {
 
       const pararAnimacao = animar((dt) => {
         if (esperando) return true;
-        vel = segurando ? Math.min(55, vel + 45 * dt) : Math.max(0, vel - 160 * dt);
+        vel = segurando ? Math.min(VAZAO, vel + 45 * dt) : Math.max(0, vel - 160 * dt);
         quanto = Math.min(100, quanto + vel * dt);
         nivel.style.height = quanto + '%';
         copo.setAttribute('aria-valuenow', String(Math.round(quanto)));
@@ -432,10 +449,13 @@ function jogoMedir(area, receita, passo, sinal) {
 function jogoFogo(area, receita, passo, sinal) {
   const DURACAO = 10;
   const tipo = FOGOS[passo.fogo] || FOGOS.medio;
-  const [baixo, alto] = tipo.faixa;
+  const folga = porNivel(passo, [6, 0, -4]); // a faixa abre no fácil e fecha no difícil
+  const baixo = tipo.faixa[0] - folga;
+  const alto = tipo.faixa[1] + folga;
+  const QUEIMA = porNivel(passo, [97, 94, 90]);
 
   return abrirJogo(area, 'Fogo: ' + tipo.nome, passo,
-    'Segure o botão (ou a barra de espaço) para aumentar o fogo e solte para baixar. Mantenha a panela na faixa de ' + tipo.nome + ' pelo máximo de tempo em ' + DURACAO + ' segundos. Passou de 94, queima.',
+    'Segure o botão (ou a barra de espaço) para aumentar o fogo e solte para baixar. Mantenha a panela na faixa de ' + tipo.nome + ' pelo máximo de tempo em ' + DURACAO + ' segundos. Passou de ' + QUEIMA + ', queima.',
     (resolve) => {
       const zona = h('div', 'termometro__zona');
       zona.style.left = baixo + '%';
@@ -476,13 +496,13 @@ function jogoFogo(area, receita, passo, sinal) {
         if (temp === 0 || temp === 100) vel = 0;
         const dentro = temp >= baixo && temp <= alto;
         if (dentro) noPonto += dt;
-        if (temp > 94) queimando += dt;
+        if (temp > QUEIMA) queimando += dt;
 
         nivel.style.width = temp + '%';
         termometro.setAttribute('aria-valuenow', String(Math.round(temp)));
-        const texto = temp > 94 ? 'Queimando!' : temp > alto ? 'Quente demais' : dentro ? 'No ponto' : 'Fraco demais';
+        const texto = temp > QUEIMA ? 'Queimando!' : temp > alto ? 'Quente demais' : dentro ? 'No ponto' : 'Fraco demais';
         if (estadoTexto.textContent !== texto) estadoTexto.textContent = texto;
-        termometro.dataset.estado = temp > 94 ? 'queima' : dentro ? 'ponto' : '';
+        termometro.dataset.estado = temp > QUEIMA ? 'queima' : dentro ? 'ponto' : '';
         tempo.marcar(1 - passou / DURACAO);
         if (passou >= DURACAO) { terminar(); return false; }
         return true;
@@ -504,12 +524,12 @@ function jogoFogo(area, receita, passo, sinal) {
 
 function jogoForno(area, receita, passo, sinal) {
   const RODADAS = 2;
-  const DOURADO = [0.62, 0.78];
+  const DOURADO = porNivel(passo, [[0.58, 0.82], [0.62, 0.78], [0.65, 0.75]]);
 
   return abrirJogo(area, 'Forno', passo,
     'O prato vai escurecendo no forno, cada vez num ritmo. Tire quando a cor chegar na faixa dourada: cru não vale, queimado menos ainda. Use o botão ou a barra de espaço. São ' + RODADAS + ' fornadas.',
     (resolve) => {
-      const arte = pixelCanvas(receita.arte, 128);
+      const arte = imagemDoPrato(receita, 128);
       const janela = h('div', 'forno__janela', arte);
       const faixa = h('div', 'forno__faixa');
       faixa.style.left = DOURADO[0] * 100 + '%';
@@ -530,7 +550,7 @@ function jogoForno(area, receita, passo, sinal) {
 
       function novaFornada() {
         cor = 0;
-        ritmo = 0.08 + Math.random() * 0.07;
+        ritmo = porNivel(passo, [0.06, 0.08, 0.11]) + Math.random() * porNivel(passo, [0.05, 0.07, 0.08]);
         esperando = false;
         placar.textContent = 'Fornada ' + (notas.length + 1) + ' de ' + RODADAS;
         retorno.textContent = '';
@@ -591,6 +611,11 @@ function jogoForno(area, receita, passo, sinal) {
 
 function jogoMontar(area, receita, passo, sinal) {
   const camadas = lista(passo.camadas);
+  const MULTA = porNivel(passo, [8, 12, 18]);
+  // no difícil, duas camadas que não fazem parte do prato aparecem para confundir
+  const intrusas = nivelDo(passo).id === 'dificil'
+    ? embaralhar(DESPENSA.filter((n) => !camadas.some((c) => chaveTexto(c) === chaveTexto(n)))).slice(0, 2)
+    : [];
 
   return abrirJogo(area, 'Montar', passo,
     'Toque nas camadas na ordem, de baixo para cima. Cada camada fora de ordem custa pontos.',
@@ -603,7 +628,7 @@ function jogoMontar(area, receita, passo, sinal) {
       let feitas = 0;
       let erros = 0;
 
-      const botoes = embaralhar(camadas.map((nome, i) => ({ nome, i }))).map(({ nome }) => {
+      const botoes = embaralhar(camadas.concat(intrusas)).map((nome) => {
         const b = botao(nome, 'despensa__item', () => {
           if (b.disabled) return;
           if (chaveTexto(nome) === chaveTexto(camadas[feitas])) {
@@ -613,7 +638,7 @@ function jogoMontar(area, receita, passo, sinal) {
             feitas++;
             retorno.textContent = '';
             if (feitas === camadas.length) {
-              const nota = limitar(100 - erros * 12, 0, 100);
+              const nota = limitar(100 - erros * MULTA, 0, 100);
               pecas.remove();
               fimDeJogo(palco, erros ? 'Montado, com ' + erros + (erros === 1 ? ' troca de ordem.' : ' trocas de ordem.') : 'Montado sem errar uma camada.', nota, resolve);
             }
@@ -636,14 +661,16 @@ function jogoMontar(area, receita, passo, sinal) {
 /* ---------- Catálogo (usado pela cozinha e pelo cadastro) ---------- */
 
 const JOGOS = {
-  separar: { nome: 'Separar', faz: 'Separar ingredientes', detalhe: 'Ingredientes deste passo, separados por vírgula (vazio = todos)', jogar: jogoSeparar },
-  cortar: { nome: 'Cortar', faz: 'Cortar, picar, fatiar', detalhe: 'O que vai na tábua (ex.: a cebola)', jogar: jogoCortar },
-  misturar: { nome: 'Misturar', faz: 'Bater, mexer, sovar', detalhe: '', jogar: jogoMisturar },
-  medir: { nome: 'Medir', faz: 'Despejar na medida', detalhe: 'O que despejar (ex.: 300 ml de leite)', jogar: jogoMedir },
-  fogo: { nome: 'Fogo', faz: 'Ferver, fritar, refogar', detalhe: 'fogo', jogar: jogoFogo },
-  forno: { nome: 'Forno', faz: 'Assar, tostar, gratinar', detalhe: '', jogar: jogoForno },
-  montar: { nome: 'Montar', faz: 'Montar camadas, empratar', detalhe: 'Camadas de baixo para cima, separadas por vírgula', jogar: jogoMontar }
+  separar: { nome: 'Separar', faz: 'Separar ingredientes', descricao: 'Tocar nos ingredientes do passo e deixar os intrusos na despensa, contra o relógio.', detalhe: 'Ingredientes deste passo, separados por vírgula (vazio = todos)', jogar: jogoSeparar },
+  cortar: { nome: 'Cortar', faz: 'Cortar, picar, fatiar', descricao: 'Cortar quando a faca passa na faixa clara. A faca acelera a cada corte.', detalhe: 'O que vai na tábua (ex.: a cebola)', jogar: jogoCortar },
+  misturar: { nome: 'Misturar', faz: 'Bater, mexer, sovar', descricao: 'Alternar ← e → no ritmo até a mistura ficar lisa, sem respingar.', detalhe: '', jogar: jogoMisturar },
+  medir: { nome: 'Medir', faz: 'Despejar na medida', descricao: 'Segurar para despejar e soltar na linha. O líquido ainda escorre depois.', detalhe: 'O que despejar (ex.: 300 ml de leite)', jogar: jogoMedir },
+  fogo: { nome: 'Fogo', faz: 'Ferver, fritar, refogar', descricao: 'Segurar e soltar para manter a panela na faixa do fogo pedido.', detalhe: 'fogo', jogar: jogoFogo },
+  forno: { nome: 'Forno', faz: 'Assar, tostar, gratinar', descricao: 'Tirar do forno quando a cor chega no dourado. Cada fornada tem um ritmo.', detalhe: '', jogar: jogoForno },
+  montar: { nome: 'Montar', faz: 'Montar camadas, empratar', descricao: 'Tocar nas camadas na ordem, de baixo para cima.', detalhe: 'Camadas de baixo para cima, separadas por vírgula', jogar: jogoMontar }
 };
+
+const MAX_PASSOS = 12;
 
 // sugestão de aula a partir do modo de preparo (cada frase vira um passo pelo verbo)
 const VERBOS = [
@@ -663,13 +690,13 @@ function sugerirPassos(preparo, ingredientes) {
     if (!achado) return;
     const jogo = achado[0];
     if (passos.length && passos[passos.length - 1].jogo === jogo) return;
-    const passo = { jogo, texto: frase.length > 120 ? frase.slice(0, 117) + '...' : frase };
+    const passo = { jogo, texto: frase.length > 120 ? frase.slice(0, 117) + '...' : frase, dificuldade: 'normal' };
     if (jogo === 'fogo') passo.fogo = /\b(baixo|brando)\b/i.test(frase) ? 'brando' : /\b(alto|ferv|frit)/i.test(frase) ? 'alto' : 'medio';
     if (jogo === 'montar') passo.camadas = ingredientes.slice(0, 5).join(', ');
     passos.push(passo);
   });
-  if (!passos.length || passos[0].jogo !== 'separar') passos.unshift({ jogo: 'separar', texto: 'Separe os ingredientes.' });
-  return passos.slice(0, 8);
+  if (!passos.length || passos[0].jogo !== 'separar') passos.unshift({ jogo: 'separar', texto: 'Separe os ingredientes.', dificuldade: 'normal' });
+  return passos.slice(0, MAX_PASSOS);
 }
 
 /* ---------- Teste de culinária (regras do Vortex) ---------- */
@@ -720,7 +747,7 @@ function qualidadeDoPrato(teste, cd) {
 }
 
 // o item no formato de "Item geral" consumível do Vortex, com a pixel art como miniatura
-function montarPrato(receita, ficha, teste, cd, qualidade, media) {
+function montarPrato(receita, ficha, teste, cd, qualidade, media, quantidade) {
   const rec = '+' + qualidade.pv + ' PV' + (qualidade.pe ? ', +' + qualidade.pe + ' PE' : '');
   const nome = (qualidade.min < 1 ? receita.nome + ' (passou do ponto)' : receita.nome).replace(/\s+/g, ' ').trim().slice(0, 60);
   const hoje = new Date().toLocaleDateString('pt-BR');
@@ -743,8 +770,8 @@ function montarPrato(receita, ficha, teste, cd, qualidade, media) {
     },
     bonus: {},
     slots: { mods: [], props: [], accs: [] },
-    thumb: pixelPNG(receita.arte),
-    qty: 1,
+    thumb: receita.miniatura || pixelPNG(receita.arte),
+    qty: quantidade,
     slot: ''
   };
 }

@@ -6,6 +6,7 @@
    abaixo e troque os dados. As chaves de "ingredientes" são os nomes em
    inglês da API (sem diferença de maiúsculas).
 
+   Cada passo pode ter dificuldade: 'facil', 'normal' (padrão) ou 'dificil'.
    Jogos disponíveis (minigames.js):
      separar  · itens: os ingredientes do passo
      cortar   · alvo: o que vai na tábua
@@ -39,7 +40,7 @@ const CARDAPIO = [
       'Frias, as panquecas podem ser congeladas por até 2 meses, separadas por papel-manteiga.'
     ],
     passos: [
-      { jogo: 'separar', texto: 'Separe a farinha, os ovos, o leite e o óleo.', itens: ['Farinha de trigo', 'Ovos', 'Leite', 'Óleo de girassol'] },
+      { jogo: 'separar', dificuldade: 'facil', texto: 'Separe a farinha, os ovos, o leite e o óleo.', itens: ['Farinha de trigo', 'Ovos', 'Leite', 'Óleo de girassol'] },
       { jogo: 'medir', texto: 'Meça 300 ml de leite.', alvo: '300 ml de leite' },
       { jogo: 'misturar', texto: 'Bata tudo com uma pitada de sal até a massa ficar lisa.' },
       { jogo: 'fogo', texto: 'Em fogo médio, doure cada panqueca por 1 minuto de cada lado.', fogo: 'medio' },
@@ -78,7 +79,7 @@ const CARDAPIO = [
       { jogo: 'cortar', texto: 'Pique o bacon bem fino.', alvo: 'o bacon' },
       { jogo: 'misturar', texto: 'Bata as gemas com a pimenta e quase todo o pecorino.' },
       { jogo: 'fogo', texto: 'Frite o bacon em fogo médio, mexendo, até dourar.', fogo: 'medio' },
-      { jogo: 'misturar', texto: 'Fora do fogo, misture o espaguete com os ovos bem rápido, sem deixar talhar.' },
+      { jogo: 'misturar', dificuldade: 'dificil', texto: 'Fora do fogo, misture o espaguete com os ovos bem rápido, sem deixar talhar.' },
       { jogo: 'montar', texto: 'Enrole a massa no prato e finalize.', camadas: ['Espaguete', 'Molho de ovos', 'Bacon', 'Pecorino', 'Pimenta-do-reino'] }
     ]
   },
@@ -116,7 +117,7 @@ const CARDAPIO = [
       { jogo: 'fogo', texto: 'Frite os hambúrgueres em óleo bem quente, 1 a 2 minutos de cada lado.', fogo: 'alto' },
       { jogo: 'cortar', texto: 'Corte cada pão em três fatias.', alvo: 'os pães' },
       { jogo: 'forno', texto: 'Toste os pães de leve.' },
-      { jogo: 'montar', texto: 'Monte o lanche em camadas, de baixo para cima.', camadas: ['Pão de baixo', 'Molho', 'Alface', 'Queijo', 'Hambúrguer', 'Picles', 'Pão do meio', 'Molho', 'Hambúrguer', 'Pão de cima'] }
+      { jogo: 'montar', dificuldade: 'dificil', texto: 'Monte o lanche em camadas, de baixo para cima.', camadas: ['Pão de baixo', 'Molho', 'Alface', 'Queijo', 'Hambúrguer', 'Picles', 'Pão do meio', 'Molho', 'Hambúrguer', 'Pão de cima'] }
     ]
   },
 
@@ -153,7 +154,7 @@ const CARDAPIO = [
       { jogo: 'cortar', texto: 'Pique a cebola e a cenoura.', alvo: 'a cebola e a cenoura' },
       { jogo: 'fogo', texto: 'Refogue a cebola com uma pitada de sal e depois a cenoura.', fogo: 'medio' },
       { jogo: 'medir', texto: 'Junte as lentilhas, o caldo e a água.', alvo: '4 xícaras de caldo' },
-      { jogo: 'fogo', texto: 'Cozinhe em fogo baixo, semitampado, até a lentilha desmanchar.', fogo: 'brando' },
+      { jogo: 'fogo', dificuldade: 'facil', texto: 'Cozinhe em fogo baixo, semitampado, até a lentilha desmanchar.', fogo: 'brando' },
       { jogo: 'misturar', texto: 'Bata a sopa até a textura que preferir.' }
     ]
   },
@@ -187,7 +188,7 @@ const CARDAPIO = [
     passos: [
       { jogo: 'separar', texto: 'Separe os ingredientes da base e do creme.', itens: ['Biscoito digestivo', 'Manteiga', 'Açúcar refinado', 'Ovos batidos', 'Amêndoas moídas'] },
       { jogo: 'misturar', texto: 'Bata a manteiga com o açúcar até ficar fofo; junte os ovos e as amêndoas.' },
-      { jogo: 'cortar', texto: 'Descasque e fatie as maçãs bem fino.', alvo: 'as maçãs' },
+      { jogo: 'cortar', dificuldade: 'dificil', texto: 'Descasque e fatie as maçãs bem fino.', alvo: 'as maçãs' },
       { jogo: 'montar', texto: 'Monte a torta na forma.', camadas: ['Base de biscoito', 'Fatias de maçã', 'Creme de amêndoas', 'Amêndoas em lascas'] },
       { jogo: 'forno', texto: 'Asse por 20 a 25 minutos, até dourar.' }
     ]
@@ -229,7 +230,7 @@ const CARDAPIO = [
       { jogo: 'separar', texto: 'Separe os temperos da mistura secreta.', itens: ['Páprica', 'Sal de cebola', 'Pimenta em pó', 'Pimenta-do-reino', 'Sálvia', 'Alho em pó', 'Orégano', 'Manjericão'] },
       { jogo: 'misturar', texto: 'Misture os temperos com a farinha, o açúcar mascavo e o sal.' },
       { jogo: 'montar', texto: 'Empane cada pedaço: primeiro a clara, depois a farinha.', camadas: ['Pedaço de frango', 'Clara de ovo', 'Farinha temperada'] },
-      { jogo: 'fogo', texto: 'Frite em óleo bem quente por 12 a 14 minutos, até dourar.', fogo: 'alto' }
+      { jogo: 'fogo', dificuldade: 'dificil', texto: 'Frite em óleo bem quente por 12 a 14 minutos, até dourar.', fogo: 'alto' }
     ]
   }
 ];

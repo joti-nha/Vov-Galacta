@@ -244,9 +244,140 @@ const SPRITES = {
 
 const SPRITE_PADRAO = 'pao';
 
-// desenha num canvas; "tamanho" é o lado final em pixels de tela
-function pixelCanvas(nome, tamanho) {
-  const sprite = SPRITES[nome] || SPRITES[SPRITE_PADRAO];
+// ícones da vitrine de minigames (12 x 12)
+const ICONES_JOGOS = {
+  separar: {
+    nome: 'Cesta de ingredientes',
+    cores: { G: '#6cc04a', R: '#e0453a', O: '#f2a541', T: '#d9a35a', t: '#a8742f' },
+    linhas: [
+      '............',
+      '...G..R.....',
+      '..GGG.RR.O..',
+      '...G.RRR.OO.',
+      '.KKKKKKKKKK.',
+      'KTtTtTtTtTtK',
+      '.KtTtTtTtTK.',
+      '.KTtTtTtTtK.',
+      '..KtTtTtTK..',
+      '..KKKKKKKK..',
+      '............',
+      '............'
+    ]
+  },
+  cortar: {
+    nome: 'Faca',
+    cores: { L: '#dfe8ee', B: '#8a5526' },
+    linhas: [
+      '............',
+      '..........K.',
+      '.........KLK',
+      '........KLLK',
+      '.......KLLK.',
+      '......KLLK..',
+      '.....KLLK...',
+      '....KLLK....',
+      '...KBBK.....',
+      '..KBBK......',
+      '.KBBK.......',
+      '..KK........'
+    ]
+  },
+  misturar: {
+    nome: 'Tigela e colher',
+    cores: { L: '#dfe8ee', Y: '#f2d27a', B: '#3b6fb0' },
+    linhas: [
+      '........K...',
+      '.......KLK..',
+      '......KLK...',
+      '.....KLK....',
+      '....KLK.....',
+      'KKKKKKKKKKKK',
+      'KYYYLYYYYYYK',
+      '.KBBBBBBBBK.',
+      '.KBBBBBBBBK.',
+      '..KBBBBBBK..',
+      '...KKKKKK...',
+      '............'
+    ]
+  },
+  medir: {
+    nome: 'Copo medidor',
+    cores: { c: '#cfe3ec', M: '#63d6e8', L: '#29507f' },
+    linhas: [
+      '............',
+      '..KKKKKKK...',
+      '..KcccccKKK.',
+      '..KcLcccK.K.',
+      '..KcccccK.K.',
+      '..KMMMMMKKK.',
+      '..KMLMMMK...',
+      '..KMMMMMK...',
+      '..KMLMMMK...',
+      '..KMMMMMK...',
+      '..KKKKKKK...',
+      '............'
+    ]
+  },
+  fogo: {
+    nome: 'Chama',
+    cores: { R: '#e0453a', O: '#f28a2e', Y: '#f6d35a', L: '#fff6d8' },
+    linhas: [
+      '.....R......',
+      '....RR......',
+      '....RRR..R..',
+      '...RROR..RR.',
+      '..RROOORRR..',
+      '..ROOYOORR..',
+      '.RROYYYORR..',
+      '.ROOYYYOOR..',
+      '.ROYYLYYOR..',
+      '..ROYYYOR...',
+      '...RROORR...',
+      '....RRRR....'
+    ]
+  },
+  forno: {
+    nome: 'Forno',
+    cores: { G: '#9fb0bc', R: '#e0453a', O: '#f28a2e', Y: '#e9b45a' },
+    linhas: [
+      'KKKKKKKKKKKK',
+      'KGGGGGGGGGGK',
+      'KGRGGRGGRGGK',
+      'KKKKKKKKKKKK',
+      'KGKKKKKKKKGK',
+      'KGKOOOOOOKGK',
+      'KGKOYYYYOKGK',
+      'KGKOOOOOOKGK',
+      'KGKKKKKKKKGK',
+      'KGGGGGGGGGGK',
+      'KKKKKKKKKKKK',
+      '.K........K.'
+    ]
+  },
+  montar: {
+    nome: 'Camadas',
+    cores: { O: '#d98b3a', o: '#f6e7c1', G: '#6cc04a', M: '#6b3b22', Y: '#f2c230' },
+    linhas: [
+      '............',
+      '...KKKKKK...',
+      '..KOOOOOOK..',
+      '.KOoOOOoOOK.',
+      '.KKKKKKKKKK.',
+      '.KGGGGGGGGK.',
+      '.KMMMMMMMMK.',
+      '.KYYYYYYYYK.',
+      '.KOOOOOOOOK.',
+      '..KKKKKKKK..',
+      '............',
+      '............'
+    ]
+  }
+};
+
+
+// desenha num canvas; "tamanho" é o lado final em pixels de tela; "mapa" troca os pratos pelos ícones
+function pixelCanvas(nome, tamanho, mapa) {
+  const sprite = (mapa || SPRITES)[nome] || SPRITES[SPRITE_PADRAO];
   const lado = sprite.linhas.length;
   const escala = Math.max(1, Math.floor(tamanho / lado));
   const canvas = document.createElement('canvas');
@@ -270,4 +401,83 @@ function pixelCanvas(nome, tamanho) {
 // PNG pequeno (48 x 48) para guardar junto com o item no Vortex
 function pixelPNG(nome) {
   return pixelCanvas(nome, 48).toDataURL('image/png');
+}
+
+/* ---------- Foto própria (receitas da tripulação) ---------- */
+
+function carregarImagem(src) {
+  return new Promise((ok, falha) => {
+    const img = new Image();
+    img.onload = () => ok(img);
+    img.onerror = () => falha(new Error('Não deu para abrir essa imagem. Tente uma foto JPG ou PNG.'));
+    img.src = src;
+  });
+}
+
+// recorta o centro da imagem num quadrado de "lado" pixels
+function recorteQuadrado(img, lado, suave) {
+  const canvas = document.createElement('canvas');
+  canvas.width = lado;
+  canvas.height = lado;
+  const ctx = canvas.getContext('2d');
+  ctx.imageSmoothingEnabled = suave !== false;
+  const menor = Math.min(img.naturalWidth, img.naturalHeight);
+  ctx.drawImage(img, (img.naturalWidth - menor) / 2, (img.naturalHeight - menor) / 2, menor, menor, 0, 0, lado, lado);
+  return canvas;
+}
+
+// a foto do aparelho vira um JPEG pequeno (cabe no armazenamento do navegador)
+async function lerFotoDoAparelho(arquivo) {
+  if (!arquivo.type.startsWith('image/')) throw new Error('Esse arquivo não é uma imagem.');
+  const endereco = URL.createObjectURL(arquivo);
+  try {
+    const img = await carregarImagem(endereco);
+    const escala = Math.min(1, 480 / Math.max(img.naturalWidth, img.naturalHeight));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(img.naturalWidth * escala);
+    canvas.height = Math.round(img.naturalHeight * escala);
+    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+    const src = canvas.toDataURL('image/jpeg', 0.82);
+    return { src, img: await carregarImagem(src), doAparelho: true };
+  } finally {
+    URL.revokeObjectURL(endereco);
+  }
+}
+
+// miniatura de 48 x 48 para o item no Vortex (foto de link vai como o próprio link)
+function miniaturaDaFoto(foto, pixelada) {
+  if (!foto.doAparelho) return foto.src;
+  if (!pixelada) return recorteQuadrado(foto.img, 48).toDataURL('image/jpeg', 0.8);
+  const grande = document.createElement('canvas');
+  grande.width = 48;
+  grande.height = 48;
+  const ctx = grande.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(recorteQuadrado(foto.img, 24), 0, 0, 48, 48);
+  return grande.toDataURL('image/png');
+}
+
+// a imagem de um prato: a foto (normal ou em pixel art) ou o desenho escolhido
+function imagemDoPrato(r, tamanho) {
+  if (!r.foto) return pixelCanvas(r.arte, tamanho);
+  const reserva = () => pixelCanvas(r.arte, tamanho);
+  if (r.fotoPixel) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 32;
+    canvas.height = 32;
+    canvas.className = 'pixel foto';
+    canvas.setAttribute('role', 'img');
+    canvas.setAttribute('aria-label', 'Foto em pixel art: ' + r.nome);
+    carregarImagem(r.foto)
+      .then((img) => canvas.getContext('2d').drawImage(recorteQuadrado(img, 32), 0, 0))
+      .catch(() => canvas.replaceWith(reserva()));
+    return canvas;
+  }
+  const img = document.createElement('img');
+  img.className = 'foto';
+  img.src = r.foto;
+  img.alt = 'Foto do prato ' + r.nome;
+  img.loading = 'lazy';
+  img.addEventListener('error', () => img.replaceWith(reserva()), { once: true });
+  return img;
 }

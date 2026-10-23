@@ -305,6 +305,10 @@ input:focus, select:focus, textarea:focus { border-color: var(--mare); outline: 
     radial-gradient(circle at 50% 60%, rgba(var(--ambar-rgb), 0.18), transparent 62%),
     repeating-conic-gradient(var(--casco-2) 0 25%, var(--casco) 0 50%) 0 0 / 24px 24px;
 }
+button.cartao__arte { width: 100%; padding: 0; border: 0; border-bottom: var(--borda); color: inherit; font: inherit; cursor: pointer; overflow: hidden; }
+button.cartao__arte .pixel, button.cartao__arte .foto { transition: transform 0.2s ease-out; }
+button.cartao__arte:hover .pixel, button.cartao__arte:hover .foto { transform: scale(1.05); }
+button.cartao__arte:focus-visible { outline-offset: -4px; }
 .cartao__arte .pixel { width: 70%; height: auto; }
 .cartao__corpo { display: flex; flex-direction: column; gap: 0.3rem; flex: 1; padding: 1rem; }
 .cartao__nome { font-size: 1.25rem; }
@@ -341,11 +345,45 @@ input:focus, select:focus, textarea:focus { border-color: var(--mare); outline: 
   content: counter(aula); position: absolute; left: 0.75rem; top: 0.6rem;
   font-family: var(--titulo); font-size: 1.5rem; font-weight: 800; color: var(--mare); line-height: 1.6;
 }
-.passo__campos { flex: 1; min-width: 0; display: grid; grid-template-columns: minmax(0, 9rem) minmax(0, 1fr); gap: 0.4rem; }
+.passo__jogo { flex: none; display: grid; justify-items: center; gap: 0.2rem; width: 4.5rem; font-size: 0.85rem; text-align: center; }
+.passo__jogo .pixel { width: 32px; height: 32px; }
+.passo__campos { flex: 1; min-width: 0; display: grid; gap: 0.4rem; }
 .passo__campos input, .passo__campos select { padding: 0.5rem 0.65rem; background: var(--casco); }
-.passo__detalhe { grid-column: 1 / -1; }
 .passo__botoes { display: flex; gap: 0.25rem; }
-.aula__acoes { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem; margin-top: 0.75rem; }
+.aula__acoes { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1.25rem; margin-top: 0.75rem; }
+.aula__cabeca { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0.25rem 1rem; margin-top: 1.25rem; }
+.aula__titulo { font-family: var(--titulo); font-size: 1.3rem; margin: 0; }
+
+/* Vitrine de minigames */
+.vitrine { list-style: none; margin: 0.75rem 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 0.6rem; }
+.vitrine__item {
+  display: grid; grid-template-rows: auto 1fr auto auto; gap: 0.5rem;
+  padding: 0.85rem; border-radius: var(--raio); border: var(--borda); background: var(--casco-2);
+}
+.vitrine__icone { display: grid; place-items: center; height: 64px; border-radius: 8px; background: radial-gradient(circle, rgba(var(--ambar-rgb), 0.2), transparent 70%); }
+.vitrine__icone .pixel { width: 48px; height: 48px; }
+.vitrine__nome { margin: 0; font-family: var(--titulo); font-size: 1.25rem; }
+.vitrine__faz { font-size: 0.8rem; font-weight: 700; color: var(--mare); }
+.vitrine__descricao { margin-top: 0.25rem; font-size: 0.85rem; color: var(--nevoa-2); }
+.vitrine__acoes { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.vitrine__mais { min-height: 2.5rem; width: 2.75rem; padding: 0; font-size: 1.5rem; line-height: 1; }
+
+/* Dificuldade: botões e selos */
+.niveis { display: flex; gap: 0.25rem; }
+.nivel-botao {
+  flex: 1; min-height: 2rem; padding: 0.2rem 0.4rem; font-size: 0.8rem;
+  background: var(--casco); color: var(--nevoa-2); border-color: var(--linha);
+}
+.nivel-botao:hover { color: var(--nevoa); }
+.nivel-botao[aria-checked="true"] { color: var(--abismo); border-color: transparent; }
+.nivel-botao.nivel--facil[aria-checked="true"] { background: #8fd694; }
+.nivel-botao.nivel--normal[aria-checked="true"] { background: var(--mare); }
+.nivel-botao.nivel--dificil[aria-checked="true"] { background: var(--erro); }
+.nivel { display: inline-block; padding: 0.05rem 0.5rem; border-radius: 999px; font-family: var(--ui); font-size: 0.75rem; font-weight: 700; vertical-align: middle; color: var(--abismo); }
+.nivel.nivel--facil { background: #8fd694; }
+.nivel.nivel--normal { background: var(--mare); }
+.nivel.nivel--dificil { background: var(--erro); }
+.notas .nivel { justify-self: start; }
 
 .cadastro__lado { padding: 1.25rem; border-radius: var(--raio-grande); border: 1px dashed var(--linha); }
 .cadastro__lado h3 { font-size: 1.4rem; margin-bottom: 0.4rem; }
@@ -605,7 +643,56 @@ input:focus, select:focus, textarea:focus { border-color: var(--mare); outline: 
 .prato__nome { font-family: var(--titulo); font-size: 1.5rem; font-weight: 700; }
 .prato__info { color: var(--nevoa-2); font-size: 0.9rem; }
 
+.quantidade { display: flex; align-items: center; gap: 0.6rem; }
+.quantidade__rotulo { font-weight: 700; margin-right: 0.25rem; }
+.quantidade__valor { min-width: 2.5ch; text-align: center; font-family: var(--titulo); font-size: 1.75rem; font-weight: 800; color: var(--ambar); }
+.quantidade .botao--icone { width: 2.75rem; min-height: 2.75rem; font-size: 1.4rem; }
+
 .rodape { padding: 2rem var(--pad-x); border-top: var(--borda); color: var(--nevoa-2); font-size: 0.9rem; text-align: center; }
+
+/* ---------- Foto própria ---------- */
+.foto { display: block; object-fit: cover; }
+.cartao__arte .foto, .receita__arte .foto { width: 100%; height: 100%; }
+.forno__janela .foto { width: 128px; height: 128px; border-radius: 8px; }
+.prato .foto { flex: none; width: 96px; height: 96px; border-radius: var(--raio); }
+.lista-casa .foto, .lista-casa .pixel { flex: none; width: 32px; height: 32px; border-radius: 4px; }
+.arte .foto { width: 64px; height: 64px; border-radius: 6px; }
+.arte__mais {
+  display: grid; place-items: center; width: 64px; height: 64px;
+  border: 2px dashed var(--nevoa-2); border-radius: 6px;
+  font-size: 2rem; font-weight: 700; color: var(--nevoa-2);
+}
+.foto-propria {
+  display: grid; grid-template-columns: 160px minmax(0, 1fr); gap: 1rem; align-items: start;
+  margin-top: 0.75rem; padding: 1rem; border-radius: var(--raio); background: var(--casco-2);
+}
+.foto-propria[hidden] { display: none; }
+.foto-propria__previa { display: grid; place-items: center; width: 160px; height: 160px; border-radius: var(--raio); background: var(--casco); overflow: hidden; }
+.foto-propria__previa .foto, .foto-propria__previa .pixel { width: 100%; height: 100%; }
+.foto-propria__previa .campo__dica { padding: 0.75rem; text-align: center; }
+.foto-propria__campos { display: grid; gap: 0.5rem; justify-items: start; }
+.foto-propria__campos .linha-form__campos { width: 100%; }
+.foto-propria .campo__erro { grid-column: 1 / -1; }
+.marcar { display: flex; align-items: center; gap: 0.5rem; font-weight: 600; cursor: pointer; }
+.marcar input { width: 1.2rem; height: 1.2rem; accent-color: var(--ambar); }
+
+/* ---------- Nyan Cat: gatos ao fundo ---------- */
+.nyan-ceu { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+.nyan-gato { position: absolute; left: 0; display: flex; align-items: center; will-change: transform; }
+.nyan-gato__arte { height: var(--s); width: auto; image-rendering: pixelated; }
+.nyan-gato__rastro {
+  display: flex; flex-direction: column; width: calc(var(--s) * 3.2); height: calc(var(--s) * 0.6); margin-right: calc(var(--s) * -0.3);
+  -webkit-mask: linear-gradient(90deg, transparent, #000 45%); mask: linear-gradient(90deg, transparent, #000 45%);
+  animation: nyan-rastro 0.4s steps(1) infinite;
+}
+.nyan-gato__rastro i { flex: 1; }
+.nyan-gato__rastro i:nth-child(1) { background: #ff2a2a; }
+.nyan-gato__rastro i:nth-child(2) { background: #ff9a2a; }
+.nyan-gato__rastro i:nth-child(3) { background: #ffee2a; }
+.nyan-gato__rastro i:nth-child(4) { background: #33ff4a; }
+.nyan-gato__rastro i:nth-child(5) { background: #2aa8ff; }
+.nyan-gato__rastro i:nth-child(6) { background: #7a2aff; }
+@keyframes nyan-rastro { 50% { transform: translateY(calc(var(--s) * 0.06)); } }
 
 /* ---------- 10. CELULAR ---------- */
 @media (max-width: 900px) {
@@ -629,8 +716,9 @@ input:focus, select:focus, textarea:focus { border-color: var(--mare); outline: 
   .cozinheiro__nome { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.9rem; }
   .menu { order: 3; width: 100%; margin: 0; justify-content: space-between; }
   .menu a { flex: 1; text-align: center; padding-inline: 0.5rem; }
-  .campo-dupla, .passo__campos, .montagem { grid-template-columns: 1fr; }
-  .passo { flex-direction: column; }
+  .campo-dupla, .passo__campos, .montagem, .foto-propria { grid-template-columns: 1fr; }
+  .passo { flex-wrap: wrap; }
+  .passo__campos { flex-basis: 100%; order: 3; }
   .busca, .linha-form__campos { flex-direction: column; }
   .ficha { flex-wrap: wrap; }
   .ficha .botao { width: 100%; }

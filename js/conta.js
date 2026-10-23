@@ -61,6 +61,7 @@ function aplicarTema() {
   const { unlocked, active } = lerTemas();
   const id = active && unlocked.includes(active) ? active : '';
   if (id) document.documentElement.dataset.theme = id; else delete document.documentElement.dataset.theme;
+  efeitoNyan(id === 'nyan');
   return id;
 }
 

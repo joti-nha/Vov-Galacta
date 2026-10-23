@@ -137,7 +137,22 @@
 
           <fieldset class="campo">
             <legend>Aparência do prato</legend>
+            <p class="campo__dica">Escolha um desenho ou use uma foto sua.</p>
             <div class="artes" id="r-artes"></div>
+            <div class="foto-propria" id="r-foto-area" hidden>
+              <div class="foto-propria__previa" id="r-foto-previa" aria-live="polite"></div>
+              <div class="foto-propria__campos">
+                <label class="botao botao--principal botao--pequeno" for="r-foto-arquivo">Escolher foto do aparelho</label>
+                <input id="r-foto-arquivo" class="visualmente-oculto" type="file" accept="image/*">
+                <label for="r-foto-link">Ou cole o link de uma imagem</label>
+                <div class="linha-form__campos">
+                  <input id="r-foto-link" type="url" placeholder="https://..." autocomplete="off">
+                  <button class="botao botao--linha botao--pequeno" type="button" id="r-foto-usar-link">Usar link</button>
+                </div>
+                <label class="marcar"><input id="r-foto-pixel" type="checkbox"> Transformar a foto em pixel art</label>
+              </div>
+              <p class="campo__erro" id="erro-foto"></p>
+            </div>
           </fieldset>
 
           <div class="campo">
@@ -156,12 +171,18 @@
 
           <fieldset class="campo aula">
             <legend>Aula: os minigames, na ordem</legend>
-            <p class="campo__dica" id="dica-aula">De 2 a 8 passos. Cada passo é uma ação da receita e o jogo que ensina essa ação.</p>
-            <ol class="aula__passos" id="r-passos" aria-describedby="dica-aula erro-passos"></ol>
+            <p class="campo__dica">Escolha na vitrine os jogos da aula, na ordem das ações da receita. Marque a dificuldade e toque em + para pôr o passo; o mesmo jogo pode entrar mais de uma vez. Use "Experimentar" para treinar um jogo antes.</p>
+            <ul class="vitrine" id="vitrine" aria-label="Vitrine de minigames"></ul>
+
+            <div class="aula__cabeca">
+              <h4 class="aula__titulo" id="titulo-passos">Sua aula</h4>
+              <p class="campo__dica" id="contagem-passos"></p>
+            </div>
+            <ol class="aula__passos" id="r-passos" aria-labelledby="titulo-passos" aria-describedby="erro-passos"></ol>
             <p class="campo__erro" id="erro-passos"></p>
             <div class="aula__acoes">
-              <button class="botao botao--linha botao--pequeno" type="button" id="r-mais-passo">Adicionar passo</button>
               <button class="botao botao--texto" type="button" id="r-sugerir">Sugerir pelo modo de preparo</button>
+              <button class="botao botao--texto botao--perigo" type="button" id="r-limpar-aula">Esvaziar a aula</button>
             </div>
           </fieldset>
 
@@ -240,6 +261,7 @@
   <script src="js/cardapio.js"></script>
   <script src="js/receitas-api.js"></script>
   <script src="js/vortex-api.js"></script>
+  <script src="js/tema-nyan.js"></script>
   <script src="js/conta.js"></script>
   <script src="js/minigames.js"></script>
   <script src="js/app.js"></script>
