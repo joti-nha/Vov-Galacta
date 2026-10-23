@@ -216,9 +216,10 @@ function jogoSeparar(area, receita, passo, sinal) {
     .concat(embaralhar(DA_GALAXIA).slice(0, 2));
   const opcoes = embaralhar(certos.concat(falsos));
   const TEMPO = Math.round((18 + certos.length * 2) * porNivel(passo, [1.5, 1, 0.7]));
+  const MULTA = porNivel(passo, [6, 10, 15]); // cada coisa errada que você tenta levar
 
   return abrirJogo(area, 'Separar', passo,
-    'Arraste os ' + certos.length + ' ingredientes deste passo da despensa para a bancada (ou toque neles). Você tem ' + TEMPO + ' segundos.',
+    'Toque (ou arraste) os ' + certos.length + ' ingredientes deste passo: o certo vai para a bancada, o errado ganha um ✕ e tira pontos. Você tem ' + TEMPO + ' segundos.',
     (resolve) => {
       const tempo = relogio();
       // o armário: prateleiras de madeira com as coisas espalhadas, em pé, cada uma de um jeito
@@ -231,24 +232,43 @@ function jogoSeparar(area, receita, passo, sinal) {
         h('div', 'bancada__frente', h('i'), h('i'), h('i')));
       bancada.dataset.zona = 'bancada';
       const pronto = botao('Pronto, bancada separada', 'botao--principal');
-      const palco = palcoDoJogo(area, 'Separar', passo, tempo.el, h('div', 'cozinha-separar', despensa, bancada), h('div', 'jogo__acoes', pronto));
+      const retorno = retornoVivo();
+      const contagem = h('p', 'bancada__conta');
+      const palco = palcoDoJogo(area, 'Separar', passo, tempo.el, contagem, h('div', 'cozinha-separar', despensa, bancada), retorno, h('div', 'jogo__acoes', pronto));
       let encerrado = false;
+      let erros = 0;
+      let levados = 0;
+      const contar = () => { contagem.textContent = 'Na bancada: ' + levados + ' de ' + certos.length; };
+      contar();
 
       // quantas coisas cabem por prateleira depende da largura da tela
       const porPrateleira = limitar(Math.floor((palco.clientWidth - 40) / 92), 3, 6);
       const linhas = Array.from({ length: Math.ceil(opcoes.length / porPrateleira) }, () => h('div', 'prateleira__itens'));
       linhas.forEach((l) => prateleiras.append(h('div', 'prateleira', l)));
 
-      const mover = (item, zona) => {
-        if (encerrado || !zona) return;
-        const destino = zona === bancada ? itensDaBancada : item.casa;
-        if (item.parentElement === destino) return;
-        destino.append(item);
-        item.setAttribute('aria-pressed', String(zona === bancada));
-        item.classList.remove('is-caiu');
-        void item.offsetWidth;
-        item.classList.add('is-caiu');
-        vibrar(15);
+      // levar para a bancada: o certo vai na hora; o errado fica na prateleira com um ✕ e custa pontos
+      const levar = (item) => {
+        if (encerrado || item.disabled || item.parentElement === itensDaBancada) return;
+        const nome = item.dataset.nome;
+        if (certos.includes(nome)) {
+          itensDaBancada.append(item);
+          item.setAttribute('aria-pressed', 'true');
+          item.classList.remove('is-caiu');
+          void item.offsetWidth;
+          item.classList.add('is-caiu');
+          levados++;
+          contar();
+          mostrarRetorno(retorno, 'Isso! ' + nome + ' na bancada.', 'bom');
+          vibrar(15);
+          if (levados === certos.length) encerrar();
+        } else {
+          erros++;
+          item.disabled = true;
+          item.classList.add('is-recusado');
+          item.setAttribute('aria-label', nome + ': não vai neste passo');
+          mostrarRetorno(retorno, nome + ' não vai neste passo.', 'ruim');
+          vibrar(60);
+        }
       };
       const chips = opcoes.map((nome, i) => {
         const item = botao('', 'item-despensa', null, iconeIngrediente(nome, 44), h('span', 'item-despensa__nome', nome));
@@ -259,8 +279,8 @@ function jogoSeparar(area, receita, passo, sinal) {
         item.style.setProperty('--recuo', Math.round(Math.random() * 6) + 'px');
         item.casa = linhas[Math.floor(i / porPrateleira)];
         ingredienteArrastavel(item, {
-          soltar: (zona) => mover(item, zona),
-          tocar: () => mover(item, item.closest('[data-zona]') === bancada ? despensa : bancada)
+          soltar: (zona) => { if (zona === bancada) levar(item); },
+          tocar: () => levar(item)
         });
         item.casa.append(item);
         return item;
@@ -278,20 +298,17 @@ function jogoSeparar(area, receita, passo, sinal) {
         if (encerrado) return;
         encerrado = true;
         parar();
-        const escolhidos = new Set(chips.filter((c) => c.closest('[data-zona]') === bancada).map((c) => c.dataset.nome));
-        const acertos = certos.filter((n) => escolhidos.has(n)).length;
-        const erros = [...escolhidos].filter((n) => !certos.includes(n)).length;
         chips.forEach((c) => {
-          const nome = c.dataset.nome;
           c.disabled = true;
-          if (certos.includes(nome)) c.classList.add(escolhidos.has(nome) ? 'is-certo' : 'is-faltou');
-          else if (escolhidos.has(nome)) c.classList.add('is-errado');
+          if (certos.includes(c.dataset.nome)) c.classList.add(c.parentElement === itensDaBancada ? 'is-certo' : 'is-faltou');
         });
         pronto.remove();
-        const nota = limitar(Math.round((acertos / certos.length) * 100 - erros * 20), 0, 100);
-        const texto = erros
-          ? acertos + ' de ' + certos.length + ' certos, mas ' + erros + (erros === 1 ? ' intruso foi' : ' intrusos foram') + ' parar na bancada.'
-          : acertos === certos.length ? 'Bancada perfeita. A Vó nem precisou olhar.' : acertos + ' de ' + certos.length + ' ingredientes separados.';
+        const acertos = levados;
+        const nota = limitar(Math.round((acertos / certos.length) * 100 - erros * MULTA), 0, 100);
+        const errosTexto = erros + (erros === 1 ? ' coisa errada' : ' coisas erradas');
+        const texto = acertos === certos.length
+          ? (erros ? 'Bancada completa, mas você tentou levar ' + errosTexto + '.' : 'Bancada perfeita. A Vó nem precisou olhar.')
+          : acertos + ' de ' + certos.length + ' ingredientes separados' + (erros ? ', e ' + errosTexto + ' recusadas.' : '.');
         fimDeJogo(palco, texto, nota, resolve);
       }
       pronto.addEventListener('click', encerrar);
@@ -1109,7 +1126,7 @@ function jogoMontar(area, receita, passo, sinal) {
 /* ---------- Catálogo (usado pela cozinha e pelo cadastro) ---------- */
 
 const JOGOS = {
-  separar: { nome: 'Separar', faz: 'Separar ingredientes', descricao: 'Arrastar os ingredientes do passo da despensa para a bancada, contra o relógio.', detalhe: 'Ingredientes deste passo, separados por vírgula (o primeiro Separar da aula sempre pede todos)', jogar: jogoSeparar },
+  separar: { nome: 'Separar', faz: 'Separar ingredientes', descricao: 'Tocar nos ingredientes do passo na despensa: o certo vai para a bancada, o errado ganha um ✕. Contra o relógio.', detalhe: 'Ingredientes deste passo, separados por vírgula (o primeiro Separar da aula sempre pede todos)', jogar: jogoSeparar },
   cortar: { nome: 'Cortar', faz: 'Cortar, picar, fatiar', descricao: 'Segurar a faca, mirar na marca e soltar para cortar antes que ela suma.', detalhe: 'O que vai na tábua (ex.: a cebola)', jogar: jogoCortar },
   misturar: { nome: 'Misturar', faz: 'Bater, mexer, sovar', descricao: 'Girar a colher em volta da tigela, sempre para o mesmo lado, sem respingar.', detalhe: '', jogar: jogoMisturar },
   medir: { nome: 'Medir', faz: 'Despejar na medida', descricao: 'Inclinar a jarra para despejar e endireitar na hora certa para parar na linha.', detalhe: 'O que despejar (ex.: 300 ml de leite)', jogar: jogoMedir },

@@ -583,6 +583,10 @@ button.cartao__arte:focus-visible { outline-offset: -4px; }
 .item-despensa.is-certo::after { content: "✓"; }
 .item-despensa.is-errado::after { content: "✕"; }
 .item-despensa.is-faltou::after { content: "faltou"; }
+/* errado: fica na prateleira, apagado e com um ✕ grande por cima */
+.item-despensa.is-recusado { opacity: 0.55; animation: tremer 0.3s; }
+.item-despensa.is-recusado::before { content: "✕"; position: absolute; inset: 0; display: grid; place-items: center; font: 900 3.4rem/1 system-ui, sans-serif; color: #ff3b3b; text-shadow: 0 3px 0 #000, 0 0 8px #000; z-index: 2; pointer-events: none; }
+.bancada__conta { margin: 0; font-weight: 700; }
 
 .bancada { position: relative; margin-top: 0.9rem; }
 .bancada__tampo {

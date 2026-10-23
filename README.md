@@ -38,7 +38,7 @@ Os jogos são de mexer nos instrumentos com o dedo ou o mouse. Todos também fun
 
 | Jogo | Ação da receita | Como joga (toque) | Teclado |
 | --- | --- | --- | --- |
-| Separar | separar, escolher | arrastar da despensa (prateleiras com cada ingrediente no seu ícone) para a bancada, ou tocar. O primeiro Separar da aula pede **todos** os ingredientes da receita; os seguintes, só os do passo | Tab e Enter |
+| Separar | separar, escolher | tocar (ou arrastar) as coisas da despensa: o certo vai na hora para a bancada, o errado ganha um ✕ e tira pontos. O jogo acaba quando a bancada fica completa. O primeiro Separar da aula pede **todos** os ingredientes da receita; os seguintes, só os do passo | Tab e Enter |
 | Cortar | cortar, picar, fatiar | segurar a faca, levar até a marca e soltar; cada marca tem prazo | ← → e espaço |
 | Misturar | bater, mexer, sovar | só a colher anda: ela segue o dedo e arrasta a massa (pixel art com as cores dos ingredientes do passo), que vai se misturando até ficar lisa. Sempre para o mesmo lado, sem respingar | ← e → alternados |
 | Medir | despejar na medida | arrastar a jarra para inclinar; soltar endireita (ainda escorre um pouco) | segurar espaço |
