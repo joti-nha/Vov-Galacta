@@ -481,3 +481,181 @@ function imagemDoPrato(r, tamanho) {
   img.addEventListener('error', () => img.replaceWith(reserva()), { once: true });
   return img;
 }
+
+/* ---------- Ícones de ingredientes (10 x 10) ---------- */
+
+const GARRAFA = [
+  '...KKK....',
+  '...KCK....',
+  '...KCK....',
+  '..KKKKK...',
+  '.KCCCCCK..',
+  '.KCWWWCK..',
+  '.KCWCWCK..',
+  '.KCWWWCK..',
+  '.KCCCCCK..',
+  '..KKKKK...'
+];
+
+const INGREDIENTES_ICONES = {
+  ovo: { nome: 'Ovo', cores: { W: '#fbf3e0', w: '#d9c8a3' }, linhas: ['....KK....', '...KWWK...', '..KWWWWK..', '.KWWWWWWK.', '.KWWWWWWK.', '.KWWWWWwK.', '.KWWWWwwK.', '..KWwwwK..', '...KKKK...', '..........'] },
+  leite: { nome: 'Leite', cores: { B: '#4a8fd8', W: '#f4f1ea' }, linhas: ['...KKKK...', '..KBBBBK..', '.KBBBBBBK.', '.KKKKKKKK.', '.KWWWWWWK.', '.KWBBBBWK.', '.KWBWWBWK.', '.KWBBBBWK.', '.KWWWWWWK.', '.KKKKKKKK.'] },
+  farinha: { nome: 'Farinha', cores: { S: '#efe6d2', s: '#c9b48c' }, linhas: ['..K....K..', '..KKKKKK..', '.KSSSSSSK.', '.KSSSSSSK.', 'KSSsSSsSSK', 'KSSSssSSSK', 'KSSSSSSSSK', 'KSSSSSSSSK', '.KSSSSSSK.', '..KKKKKK..'] },
+  manteiga: { nome: 'Manteiga', cores: { Y: '#f6dd7a', y: '#d9b84a' }, linhas: ['..........', '..........', '...KKKKKK.', '..KYYYYYKK', '.KYYYYYKyK', 'KKKKKKKyyK', 'KYYYYYKyK.', 'KYYYYYKK..', 'KKKKKKK...', '..........'] },
+  acucar: { nome: 'Açúcar', cores: { R: '#e0405a', W: '#ffffff', L: '#c9d6de' }, linhas: ['..KKKKKK..', '..KRRRRK..', '.KKKKKKKK.', '.KWWWWWWK.', '.KWLWWLWK.', '.KWWWLWWK.', '.KWWWWWWK.', '.KWLWWWLK.', '.KWWWWWWK.', '..KKKKKK..'] },
+  sal: { nome: 'Sal', cores: { G: '#b9c4cc', g: '#6f8fa5', W: '#ffffff' }, linhas: ['...KKKK...', '..KGgGgK..', '..KGGGGK..', '..KKKKKK..', '..KWWWWK..', '.KWWWWWWK.', '.KWWWWWWK.', '.KWWWWWWK.', '.KWWWWWWK.', '..KKKKKK..'] },
+  tempero: { nome: 'Tempero', cores: { D: '#8a5526', R: '#d9552f', r: '#a8341f' }, linhas: ['...KKKK...', '..KDDDDK..', '..KKKKKK..', '.KRRRRRRK.', '.KRrRRrRK.', '.KRRRrRRK.', '.KRrRRRRK.', '.KRRRRrRK.', '.KRRRRRRK.', '..KKKKKK..'] },
+  carne: { nome: 'Carne', cores: { M: '#c4453a', W: '#f3d6cc' }, linhas: ['..........', '...KKKK...', '..KMMMMKK.', '.KMMWMMMMK', 'KMMMMWMMMK', 'KMMMMMWMMK', 'KMMMMMMWMK', '.KMMMMMMK.', '..KKKKKK..', '..........'] },
+  frango: { nome: 'Frango', cores: { F: '#d48a2c', f: '#a85d1a', W: '#f6efe2' }, linhas: ['........KK', '.......KWK', '......KWK.', '..KKKKWK..', '.KFFFFK...', 'KFfFFFFK..', 'KFFFFfFK..', 'KFFfFFFK..', '.KFFFFK...', '..KKKK....'] },
+  peixe: { nome: 'Peixe', cores: { F: '#e58f62', f: '#b8603d', e: '#24181c' }, linhas: ['..........', '....KKKK..', 'KK.KFFFFK.', 'KFKFFfFFeK', '.KFFFFFFFK', 'KFKFFfFFFK', 'KK.KFFFFK.', '....KKKK..', '..........', '..........'] },
+  queijo: { nome: 'Queijo', cores: { Y: '#f2c230', y: '#c99a1a' }, linhas: ['..........', '........K.', '......KKYK', '....KKYYYK', '..KKYYyYYK', 'KKYYYYYYYK', 'KYYyYYYYyK', 'KYYYYYyYYK', 'KKKKKKKKKK', '..........'] },
+  verdura: { nome: 'Verdura', cores: { G: '#6cc04a', g: '#3f8a2c' }, linhas: ['....GG....', '...GgGG...', '..GGgGGG..', '.GGGgGGGG.', '.GGGGgGGG.', 'GGGGGgGGGG', '.GGGGgGGG.', '..GGGgGG..', '....g.....', '....g.....'] },
+  legume: { nome: 'Legume', cores: { O: '#f28a2e', o: '#c4651f', G: '#6cc04a' }, linhas: ['......G.G.', '.......GG.', '......KKG.', '.....KOOK.', '....KOoOK.', '...KOOOK..', '..KOoOK...', '.KOOOK....', '.KOK......', '..K.......'] },
+  fruta: { nome: 'Fruta', cores: { R: '#e0405a', y: '#f6e7a0', G: '#6cc04a' }, linhas: ['...G.G....', '..GGGGG...', '.KRRRRRK..', 'KRRyRRyRK.', 'KRRRRRRRK.', 'KRyRRyRRK.', '.KRRRRRK..', '..KRyRK...', '...KRK....', '....K.....'] },
+  pao: { nome: 'Pão', cores: { O: '#d58b3c', o: '#f0c27a', d: '#9a5a23' }, linhas: ['..........', '..........', '...KKKKK..', '.KKOoOoOKK', 'KOOdOOdOOK', 'KOOOOOOOOK', 'KdOOOOOOdK', '.KddddddK.', '..KKKKKK..', '..........'] },
+  molho: { nome: 'Molho', cores: { C: '#d8393b', W: '#f6efe2' }, linhas: GARRAFA },
+  oleo: { nome: 'Óleo', cores: { C: '#e9c23a', W: '#f6efe2' }, linhas: GARRAFA },
+  massa: { nome: 'Massa', cores: { Y: '#f6de8f', y: '#d9b24f' }, linhas: ['..........', '..KKKKKK..', '.KYyYyYyK.', 'KYyYyYyYyK', 'KyYyYyYyYK', 'KYyYyYyYyK', '.KyYyYyYK.', '..KKKKKK..', '..........', '..........'] },
+  estrela: { nome: 'Coisa da galáxia', cores: { S: '#c38bff' }, linhas: ['....K.....', '...KSK....', '...KSK....', 'KKKKSKKKK.', '.KSSSSSK..', '..KSSSK...', '..KSKSK...', '.KSK.KSK..', '.KK...KK..', '..........'] },
+  pote: { nome: 'Ingrediente', cores: { D: '#8a5526', C: '#d9b06a', W: '#f6efe2' }, linhas: ['..KKKKKK..', '..KDDDDK..', '.KKKKKKKK.', '.KCCCCCCK.', '.KCWWWWCK.', '.KCWCCWCK.', '.KCWWWWCK.', '.KCCCCCCK.', '.KCCCCCCK.', '..KKKKKK..'] }
+};
+
+// qual ícone combina com o nome do ingrediente (português ou inglês)
+const ICONE_POR_PALAVRA = [
+  ['estrela', /cometa|nebulosa|asteroide|marte|\blua\b|buraco negro/],
+  ['ovo', /\bovo|egg|gema|clara/],
+  ['leite', /leite|milk|creme|cream|iogurte|yogurt/],
+  ['manteiga', /manteiga|butter/],
+  ['farinha', /farinha|flour|amido|aveia|oat|biscoit|biscuit|farofa/],
+  ['acucar', /a[cç]ucar|sugar|\bmel\b|honey|chocolate/],
+  ['sal', /\bsal\b|salt/],
+  ['frango', /frango|chicken/],
+  ['peixe', /peixe|fish|salm|camar|prawn|shrimp/],
+  ['carne', /carne|beef|bacon|porco|pork|cordeiro|lamb|hamb[uú]rguer|mince/],
+  ['queijo', /queijo|cheese|pecorino|mu[cç]arela|parmes/],
+  ['massa', /espaguete|spaghetti|macarr|\bmassa\b|pasta\b|penne/],
+  ['pao', /\bp[aã]o\b|\bp[aã]es\b|\bbun|bread|torrada|crouton/],
+  ['oleo', /[oó]leo|\boil\b|azeite/],
+  ['molho', /molho|sauce|maionese|mayonnaise|mostarda|mustard|vinagre|vinegar|caldo|stock|extrato|pur[eé]e|[aá]gua|water|ess[eê]ncia|extract/],
+  ['verdura', /alface|lettuce|repolho|cabbage|espinafre|folha|salada/],
+  ['legume', /cenoura|carrot|cebola|onion|batata|potato|ab[oó]bora|tomate|tomato|lentilha|lentil|feij|milho|pepino|picles|pickle|cogumelo|mushroom|alho\b|garlic/],
+  ['fruta', /morango|strawberr|framboesa|raspberr|mirtilo|blueberr|ma[cç][aã]|apple|banana|abacaxi|lim[aã]o|lemon|fruta|am[eê]ndoa|almond|nozes|castanha/],
+  ['tempero', /pimenta|pepper|p[aá]prica|paprika|cominho|cumin|or[eé]gano|s[aá]lvia|sage|tomilho|thyme|manjeric|basil|canela|cinnamon|tempero|spice|hortel|mint|manjerona|aipo|celery|gengibre|ginger|chili/]
+];
+
+function iconeDoIngrediente(nome) {
+  const t = String(nome).toLowerCase();
+  const achado = ICONE_POR_PALAVRA.find(([, rx]) => rx.test(t));
+  return achado ? achado[0] : 'pote';
+}
+
+// ícone pequeno ao lado de um texto (decorativo: quem lê o texto já sabe o que é)
+function iconeIngrediente(nome, tamanho) {
+  const c = pixelCanvas(iconeDoIngrediente(nome), tamanho || 20, INGREDIENTES_ICONES);
+  c.removeAttribute('role');
+  c.removeAttribute('aria-label');
+  c.setAttribute('aria-hidden', 'true');
+  return c;
+}
+
+/* ---------- Instrumentos dos jogos (16 x 16) ---------- */
+
+const INSTRUMENTOS = {
+  jarra: {
+    nome: 'Jarra de leite',
+    cores: { W: '#cfe3ec', B: '#f4f1ea' },
+    linhas: [
+      '................',
+      '....KKKKKKK.....',
+      '...KWWWWWWWK....',
+      '..KWWWWWWWWK....',
+      'KKWWWWWWWWWKKK..',
+      '.KWWWWWWWWWK.KK.',
+      '..KWWWWWWWWK..K.',
+      '..KBBBBBBBBK..K.',
+      '..KBBBBBBBBK..K.',
+      '..KBBBBBBBBK.KK.',
+      '..KBBBBBBBBKKK..',
+      '..KBBBBBBBBK....',
+      '..KBBBBBBBBK....',
+      '..KBBBBBBBBK....',
+      '...KKKKKKKK.....',
+      '................'
+    ]
+  },
+  colher: {
+    nome: 'Colher de pau',
+    cores: { W: '#c8904a' },
+    linhas: [
+      '..........KKK...',
+      '.........KWWWK..',
+      '........KWWWWWK.',
+      '........KWWWWWK.',
+      '........KWWWWWK.',
+      '.........KWWWK..',
+      '........KWKKK...',
+      '.......KWK......',
+      '......KWK.......',
+      '.....KWK........',
+      '....KWK.........',
+      '...KWK..........',
+      '..KWK...........',
+      '.KWK............',
+      '.KK.............',
+      '................'
+    ]
+  },
+  pa: {
+    nome: 'Pá de forno',
+    cores: { W: '#c8904a', w: '#9a6a2f' },
+    linhas: [
+      '..KKKKKKKKKKKK..',
+      '.KWWWWWWWWWWWWK.',
+      '.KWWwWWWWWWwWWK.',
+      '.KWWWWWWWWWWWWK.',
+      '.KWWWWWwWWWWWWK.',
+      '.KWWWWWWWWWWWWK.',
+      '..KWWWWWWWWWWK..',
+      '...KKKKWWKKKK...',
+      '......KWWK......',
+      '......KWwK......',
+      '......KWWK......',
+      '......KWWK......',
+      '......KwWK......',
+      '......KWWK......',
+      '......KWWK......',
+      '......KKKK......'
+    ]
+  },
+  panela: {
+    nome: 'Frigideira',
+    cores: { G: '#4a5560', g: '#2c343b', M: '#8a5526', O: '#f0b85a' },
+    linhas: [
+      '................',
+      '................',
+      '................',
+      '................',
+      '................',
+      '..OOO...O.......',
+      'KKKKKKKKKKKK....',
+      'KGGGGGGGGGGKKKKK',
+      'KgGGGGGGGGgKMMMK',
+      '.KgggggggggKKKKK',
+      '..KKKKKKKKK.....',
+      '................',
+      '................',
+      '................',
+      '................',
+      '................'
+    ]
+  }
+};
+
+function instrumento(nome, tamanho) {
+  const c = pixelCanvas(nome, tamanho, INSTRUMENTOS);
+  c.removeAttribute('role');
+  c.removeAttribute('aria-label');
+  c.setAttribute('aria-hidden', 'true');
+  c.draggable = false;
+  return c;
+}

@@ -5,6 +5,19 @@
 
 const CHAVE_RECEITAS = 'vovGalacta.receitas';
 const CHAVE_FICHA = 'vovGalacta.ficha';
+const CHAVE_RECORDES = 'vovGalacta.recordes';
+
+// a melhor média de aula em cada receita, guardada neste navegador
+function lerRecorde(id) {
+  try { return (JSON.parse(localStorage.getItem(CHAVE_RECORDES)) || {})[id] || 0; } catch (e) { return 0; }
+}
+function guardarRecorde(id, media) {
+  try {
+    const todos = JSON.parse(localStorage.getItem(CHAVE_RECORDES)) || {};
+    todos[id] = media;
+    localStorage.setItem(CHAVE_RECORDES, JSON.stringify(todos));
+  } catch (e) { /* sem armazenamento */ }
+}
 
 // Estado global: tudo o que a página mostra sai daqui
 const estado = {
@@ -195,7 +208,8 @@ function desenharReceita(r, verOriginal) {
     h('dt', '', 'Dificuldade'), h('dd', '', dif.nome + ' (CD ' + dif.cd + ')'));
 
   const ingredientes = h('ul', 'receita__ingredientes', ...texto.ingredientes.map((i) =>
-    h('li', '', h('span', '', i.nome), i.medida ? h('span', 'medida', i.medida) : null)));
+    h('li', '', h('span', 'receita__ingrediente', iconeIngrediente(i.nome, 20), i.nome), i.medida ? h('span', 'medida', i.medida) : null)));
+  const recorde = lerRecorde(r.id);
 
   const aula = h('ol', 'receita__aula', ...r.passos.map((p) =>
     h('li', '', h('strong', '', JOGOS[p.jogo].nome), ' ', seloNivel(p), ' ', p.texto)));
@@ -224,7 +238,8 @@ function desenharReceita(r, verOriginal) {
       h('div', 'receita__lado',
         h('div', 'receita__arte', imagemDoPrato(r, 256)),
         fatos,
-        h('div', 'receita__acao', cozinhar, h('p', 'campo__dica', dica))),
+        h('div', 'receita__acao', cozinhar, h('p', 'campo__dica', dica),
+          recorde ? h('p', 'recorde', 'Seu recorde: ' + recorde + '/100 ', estrelas(recorde)) : null)),
       h('div', 'receita__texto',
         alternar ? h('div', 'receita__idioma', alternar) : null,
         h('h3', '', 'Ingredientes'), ingredientes,
@@ -796,15 +811,22 @@ function telaDoTeste(area, receita) {
   const f = estado.ficha;
 
   const resumoJogos = h('ul', 'notas', ...receita.passos.map((p, i) =>
-    h('li', '', h('span', '', (i + 1) + '. ' + JOGOS[p.jogo].nome), seloNivel(p), h('strong', '', notas[i]))));
+    h('li', '', h('span', '', (i + 1) + '. ' + JOGOS[p.jogo].nome), seloNivel(p), h('strong', '', notas[i]), estrelas(notas[i]))));
 
   const rolar = botao('Rolar o teste de culinária', 'botao--principal botao--grande', () => {
     mostrarResultado(area, receita, testeDeCulinaria(f, bonus), dif, media);
   });
 
+  const recorde = lerRecorde(receita.id);
+  const novoRecorde = media > recorde;
+  if (novoRecorde) guardarRecorde(receita.id, media);
+
   area.replaceChildren(h('div', 'jogo',
     h('h3', 'jogo__titulo', 'Hora de servir'),
     resumoJogos,
+    novoRecorde
+      ? h('p', 'recorde recorde--novo', recorde ? 'Novo recorde nesta receita! Antes era ' + recorde + '.' : 'Primeira aula desta receita: ' + media + ' é o seu recorde.')
+      : h('p', 'recorde', 'Seu recorde nesta receita: ' + recorde + '.'),
     h('p', 'jogo__instrucao', 'Média da aula, com o peso da dificuldade de cada passo: ' + media + '/100, o que dá +' + bonus + ' no teste. '
       + (f ? textoTeste(f) + ' + ' + bonus + ', contra CD ' + dif.cd + ' (' + dif.nome.toLowerCase() + ').'
         : 'Sem personagem, o teste é 2d6 + ' + bonus + ' contra CD ' + dif.cd + '.')),
@@ -836,13 +858,13 @@ function mostrarResultado(area, receita, teste, dif, media) {
   }
 
   const q = qualidadeDoPrato(teste, dif.cd);
-  const rec = '+' + q.pv + ' PV' + (q.pe ? ', +' + q.pe + ' PE' : '');
+  const rec = recursosDo(q);
   const prato = h('div', 'prato prato--' + chaveBusca(q.raridade),
     imagemDoPrato(receita, 96),
     h('div', '',
       h('p', 'prato__raridade', q.raridade === 'Epica' ? 'Épica' : q.raridade),
       h('p', 'prato__nome', q.min < 1 ? receita.nome + ' (passou do ponto)' : receita.nome),
-      h('p', 'prato__info', 'Item geral, consumível, 2 porções, carga 0,25 cada. Bônus de recuperação: ' + rec + '.')));
+      h('p', 'prato__info', 'Alimento: consumido num descanso curto, dá ' + rec + ' além do que o descanso recupera. Item geral consumível, 2 porções, carga 0,25 cada.')));
 
   // quantos pratos fazer: todos saem com a mesma qualidade e vão juntos para o inventário
   let quantidade = 1;
@@ -917,8 +939,21 @@ $$('dialog').forEach((d) => {
 
 /* ---------- Início ---------- */
 
+// ilustrações em pixel art marcadas no HTML: <span data-sprite="sopa" data-mapa="jogos">
+function desenharSpritesDaPagina() {
+  const mapas = { pratos: SPRITES, jogos: ICONES_JOGOS, ingredientes: INGREDIENTES_ICONES, instrumentos: INSTRUMENTOS };
+  $$('[data-sprite]').forEach((el) => {
+    const c = pixelCanvas(el.dataset.sprite, Number(el.dataset.tamanho) || 64, mapas[el.dataset.mapa] || SPRITES);
+    c.removeAttribute('role');
+    c.removeAttribute('aria-label');
+    c.setAttribute('aria-hidden', 'true');
+    el.replaceChildren(c);
+  });
+}
+
 function iniciar() {
   aplicarTema();
+  desenharSpritesDaPagina();
   estado.cadastradas = lerCadastradas();
   estado.rascunhoPassos = PASSOS_INICIAIS();
   montarCategoriasDoFormulario();

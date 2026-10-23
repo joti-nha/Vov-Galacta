@@ -197,7 +197,7 @@ function mesmoPrato(valor, item) {
   return texto(f.kind) === 'item-geral'
     && texto(f.name) === item.name
     && texto(v.raridade) === item.values.raridade
-    && texto(v.bonusRec) === item.values.bonusRec
+    && texto(v.efeito) === item.values.efeito
     && !texto(f.slot);
 }
 

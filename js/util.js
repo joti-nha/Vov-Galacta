@@ -24,8 +24,8 @@ function embaralhar(lista) {
   return copia;
 }
 
-function botao(texto, classe, aoClicar) {
-  const b = h('button', 'botao ' + (classe || ''), texto);
+function botao(texto, classe, aoClicar, ...filhos) {
+  const b = h('button', 'botao ' + (classe || ''), texto || null, ...filhos);
   b.type = 'button';
   if (aoClicar) b.addEventListener('click', aoClicar);
   return b;

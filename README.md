@@ -34,20 +34,31 @@ Hoje são 6 pratos: Panquecas, Espaguete à carbonara, Big Mac caseiro, Çorba, 
 
 ## A aula: um minigame por passo — `js/minigames.js`
 
-| Jogo | Ação da receita | Como joga |
-| --- | --- | --- |
-| Separar | separar, escolher, lavar | tocar nos ingredientes do passo e deixar os intrusos na despensa |
-| Cortar | cortar, picar, fatiar | cortar quando a faca passa na faixa, 5 vezes, cada vez mais rápido |
-| Misturar | bater, mexer, sovar | alternar ← e → no ritmo até a mistura ficar lisa, sem respingar |
-| Medir | despejar na medida | segurar para despejar e soltar na linha (o líquido ainda escorre) |
-| Fogo | ferver, fritar, refogar | manter a panela na faixa do fogo pedido: baixo, médio ou alto |
-| Forno | assar, tostar | tirar do forno quando a cor chega no dourado |
-| Montar | montar camadas, empratar | tocar nas camadas na ordem, de baixo para cima |
+Os jogos são de mexer nos instrumentos com o dedo ou o mouse. Todos também funcionam pelo teclado.
 
-Quem cadastra uma receita monta a aula dela:
-- **Montar os passos:** de 2 a 8 passos, cada um com o jogo, o que fazer e o detalhe do jogo (ingredientes, o que cortar, intensidade do fogo, camadas...).
-- **Ordem:** os botões ↑ ↓ mudam a ordem dos passos.
-- **Sugerir pelo modo de preparo:** monta uma primeira versão a partir dos verbos de cada linha do preparo ("pique" vira Cortar, "asse" vira Forno, e assim por diante).
+| Jogo | Ação da receita | Como joga (toque) | Teclado |
+| --- | --- | --- | --- |
+| Separar | separar, escolher | arrastar os ingredientes do passo da despensa para a bancada (ou tocar) | Tab e Enter |
+| Cortar | cortar, picar, fatiar | segurar a faca, levar até a marca e soltar; cada marca tem prazo | ← → e espaço |
+| Misturar | bater, mexer, sovar | girar a colher em volta da tigela, sempre para o mesmo lado, sem respingar | ← e → alternados |
+| Medir | despejar na medida | arrastar a jarra para inclinar; soltar endireita (ainda escorre um pouco) | segurar espaço |
+| Fogo | ferver, fritar, refogar | girar o botão do fogão; a panela demora a responder e há imprevistos | ↑ e ↓ |
+| Forno | assar, tostar | puxar a pá para baixo quando a cor chega no dourado | espaço |
+| Montar | montar camadas, empratar | arrastar as camadas para o prato na ordem, de baixo para cima (ou tocar) | Tab e Enter |
+
+Cada jogo mostra uma **dica da Vó** antes de começar e de 0 a 3 **estrelas** no fim. O site guarda o **recorde** de cada receita neste navegador.
+
+**Dificuldade (Fácil, Normal, Difícil).** Cada passo tem a sua:
+- **No jogo:** muda o tempo, a largura das faixas, a velocidade e os imprevistos. No Montar difícil, aparecem camadas intrusas.
+- **Na nota:** pesa na média da aula. Uma nota de passo difícil vale 15% a mais, e uma de passo fácil, 15% a menos.
+
+### Cadastro: a vitrine de minigames
+Quem cadastra uma receita monta a aula pela **vitrine**:
+- **Os cartões:** cada jogo tem nome, o que faz, a escolha de dificuldade, **Experimentar** (um treino, sem prato) e **+** para pôr o passo na aula. O mesmo jogo pode entrar mais de uma vez, até 12 passos.
+- **Os passos:** em cada um se escreve o que fazer e o detalhe do jogo (ingredientes, o que cortar, a intensidade do fogo, as camadas). A dificuldade continua ajustável, e os botões ↑ ↓ × mudam a ordem ou tiram o passo.
+- **Sugerir pelo modo de preparo:** monta uma primeira versão a partir dos verbos de cada linha do preparo.
+
+A receita pode usar um dos desenhos ou **uma foto própria**, do aparelho ou por link, com a opção de transformar a foto em pixel art.
 
 ## O teste de culinária
 
@@ -59,9 +70,9 @@ A média da aula vira um bônus de +0 a +3 no teste, que segue as regras do Vort
 - **Falha total:** dois 1. A panela queima e não sai prato.
 - **CD da receita:** 6 até 6 ingredientes, 8 até 10 e 10 acima disso.
 
-A margem acima da CD define a raridade do prato e quanto ele recupera:
+A margem acima da CD define a raridade do prato e quanto ele dá a mais no descanso curto (veja a regra dos alimentos abaixo):
 
-| Margem | Raridade | Recupera |
+| Margem | Raridade | A mais no descanso curto |
 | --- | --- | --- |
 | 12 ou mais | Lendária | +6 PV, +3 PE |
 | 9 a 11 | Épica | +5 PV, +2 PE |
@@ -69,6 +80,14 @@ A margem acima da CD define a raridade do prato e quanto ele recupera:
 | 3 a 5 | Incomum | +3 PV |
 | 1 a 2 | Comum | +2 PV |
 | 0 ou menos | Comum (passou do ponto) | +1 PV |
+
+### Regra dos alimentos
+
+Todo prato segue a mesma regra: **consuma em um descanso curto e você recupera, de adicional, os recursos especificados** no item.
+
+O Vortex ainda não aplica isso sozinho no descanso, então a regra vai escrita no próprio item, nos campos "Efeito" e "Especial". O campo "Bônus de recuperação" fica vazio de propósito, porque o Vortex usaria esse campo para tratar o prato como kit de cura em combate.
+
+Na hora de servir, o seletor **− / +** escolhe quantos pratos fazer (até 99). Todos saem com a mesma qualidade e vão juntos para o inventário.
 
 ## Conta e temas do Vortex — `js/conta.js`
 
@@ -78,13 +97,14 @@ Este site e o Vortex estão no mesmo endereço (`joti-nha.github.io`), então di
 - **Personagens:** a lista de quem pode cozinhar são as fichas desse perfil.
 - **Temas:** os temas desbloqueados no Vortex (`vortex.themes.v1`) aparecem aqui com as mesmas cores, e trocar o tema aqui troca lá também.
 - **Abas abertas:** se o Vortex estiver aberto em outra aba e o tema ou a conta mudar lá, este site acompanha na hora.
+- **Tema Nyan Cat:** os gatos voam ao fundo como no Vortex, usando as mesmas artes que o Vortex publica em `Vortex_aplication/img/nyan/` (por isso só aparecem no site publicado).
 - **Limite:** os temas desbloqueados ficam guardados por aparelho, como no próprio Vortex; o perfil do Vortex não guarda temas.
 
 ## Inventário do Vortex — `js/vortex-api.js`
 
 - **Login:** o site entra como visitante anônimo no Firebase do Vortex pela API REST.
-- **O prato:** entra em `characters/{id}.sheet.inventory` como **Item geral consumível**, no mesmo formato do Vortex: raridade, carga 0,25, 2 usos, "Bônus de recuperação", lore com o resultado da aula e a pixel art como miniatura (PNG de 48 × 48).
-- **Pilha:** um prato igual soma na quantidade em vez de criar outro item.
+- **O prato:** entra em `characters/{id}.sheet.inventory` como **Item geral consumível**, no mesmo formato do Vortex: raridade, carga 0,25, 2 usos, a regra dos alimentos no efeito, lore com o resultado da aula e a imagem do prato como miniatura (48 × 48).
+- **Pilha:** pratos iguais (mesmo nome, raridade e efeito) somam na quantidade em vez de criar outro item.
 - **Gravação segura:** só o campo `sheet.inventory` é gravado, e só se a ficha não mudou desde a leitura. Se mudou, o site lê de novo e tenta outra vez. Os itens que já estavam lá voltam exatamente como vieram.
 - **Ficha aberta:** se ela estiver aberta no Vortex enquanto o prato chega, recarregue a página da ficha antes de editar.
 
@@ -94,12 +114,13 @@ Este site e o Vortex estão no mesmo endereço (`joti-nha.github.io`), então di
 index.html          seções, menu e diálogos
 css/estilo.css      identidade visual, temas do Vortex e layout (Grid e Flexbox)
 js/util.js          funções pequenas usadas por todos os scripts
-js/pixel-arte.js    os desenhos dos pratos
+js/pixel-arte.js    os desenhos dos pratos, ingredientes e instrumentos, e a foto própria
 js/cardapio.js      os pratos da API: tradução, arte e aula
 js/receitas-api.js  TheMealDB
 js/vortex-api.js    Firebase do Vortex (login, perfil, inventário)
 js/conta.js         conta e temas divididos com o Vortex
-js/minigames.js     os sete jogos, a sugestão de aula, o teste e o item do prato
+js/tema-nyan.js     os gatos voando do tema Nyan Cat
+js/minigames.js     os sete jogos de toque, as dificuldades, a sugestão de aula, o teste e o item do prato
 js/app.js           estado global, navegação, listagem, cadastro, conta e cozinha
 img/                ilustração do início e ícone
 ```
