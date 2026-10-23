@@ -1,7 +1,7 @@
 /* =====================================================================
    RECEITAS | API pública TheMealDB (https://www.themealdb.com/api.php)
-   Busca, filtro por categoria e receita completa, com fetch + async/await.
-   Tudo volta no mesmo formato de receita usado pelo resto do site.
+   O site busca, com fetch + async/await, cada prato do cardápio
+   (cardapio.js) pelo id e junta o texto original com a tradução.
    ===================================================================== */
 
 const MEALDB = 'https://www.themealdb.com/api/json/v1/1';
@@ -26,15 +26,10 @@ const CATEGORIAS = {
 
 const ORIGENS = {
   American: 'Estados Unidos', 'United States': 'Estados Unidos', British: 'Reino Unido', 'United Kingdom': 'Reino Unido',
-  Canadian: 'Canadá', Canada: 'Canadá', Chinese: 'China', China: 'China', Croatian: 'Croácia', Dutch: 'Holanda',
-  Egyptian: 'Egito', Filipino: 'Filipinas', French: 'França', France: 'França', Greek: 'Grécia', Indian: 'Índia',
-  Irish: 'Irlanda', Italian: 'Itália', Italy: 'Itália', Jamaican: 'Jamaica', Japanese: 'Japão', Kenyan: 'Quênia',
-  Malaysian: 'Malásia', Mexican: 'México', Mexico: 'México', Moroccan: 'Marrocos', Polish: 'Polônia',
-  Portuguese: 'Portugal', Russian: 'Rússia', Russia: 'Rússia', Spanish: 'Espanha', Thai: 'Tailândia',
-  Tunisian: 'Tunísia', Turkish: 'Turquia', Ukrainian: 'Ucrânia', Vietnamese: 'Vietnã', Algerian: 'Argélia',
-  Argentina: 'Argentina', Argentinian: 'Argentina', Australian: 'Austrália', Norwegian: 'Noruega',
-  Venezuela: 'Venezuela', Venezulan: 'Venezuela', Uruguayan: 'Uruguai', Syrian: 'Síria', Slovakian: 'Eslováquia',
-  'Saudi Arabian': 'Arábia Saudita', Unknown: ''
+  Canadian: 'Canadá', Chinese: 'China', French: 'França', Greek: 'Grécia', Indian: 'Índia', Irish: 'Irlanda',
+  Italian: 'Itália', Italy: 'Itália', Jamaican: 'Jamaica', Japanese: 'Japão', Mexican: 'México', Moroccan: 'Marrocos',
+  Portuguese: 'Portugal', Russian: 'Rússia', Spanish: 'Espanha', Thai: 'Tailândia', Turkish: 'Turquia', Turkey: 'Turquia',
+  Vietnamese: 'Vietnã', Unknown: ''
 };
 
 class ErroReceitas extends Error {}
@@ -44,11 +39,9 @@ async function buscarJSON(url) {
   try {
     resposta = await fetch(url);
   } catch (erro) {
-    throw new ErroReceitas('Sem conexão com a base de receitas. Confira a internet e tente de novo.');
+    throw new ErroReceitas('Sem conexão com a base de receitas.');
   }
-  if (!resposta.ok) {
-    throw new ErroReceitas('A base de receitas respondeu com erro ' + resposta.status + '. Tente de novo em instantes.');
-  }
+  if (!resposta.ok) throw new ErroReceitas('A base de receitas respondeu com erro ' + resposta.status + '.');
   return resposta.json();
 }
 
@@ -66,72 +59,53 @@ function traduzirOrigem(area) {
   return area in ORIGENS ? ORIGENS[area] : area;
 }
 
-// receita completa (search.php e lookup.php trazem tudo)
-function receitaDaApi(m) {
+// o texto como veio da API, para o botão "Ver original"
+function originalDaApi(m) {
   const ingredientes = [];
   for (let i = 1; i <= 20; i++) {
     const nome = (m['strIngredient' + i] || '').trim();
     if (nome) ingredientes.push({ nome, medida: (m['strMeasure' + i] || '').trim() });
   }
   return {
-    id: 'mealdb-' + m.idMeal,
-    idApi: m.idMeal,
-    fonte: 'api',
-    completa: true,
     nome: m.strMeal,
-    categoria: traduzirCategoria(m.strCategory),
-    origem: traduzirOrigem(m.strArea || m.strCountry),
-    imagem: m.strMealThumb || '',
     ingredientes,
-    preparo: (m.strInstructions || '').replace(/\r/g, '').split(/\n+/).map((p) => p.trim()).filter(Boolean),
-    video: m.strYoutube || '',
-    link: m.strSource || ''
+    preparo: (m.strInstructions || '').replace(/\r/g, '').split(/\n+/).map((p) => p.trim()).filter(Boolean)
   };
 }
 
-// resumo (filter.php só traz id, nome e foto): o resto é buscado ao abrir
-function resumoDaApi(m, categoriaApi) {
+// junta o prato do cardápio (tradução, arte e aula) com o que veio da API
+function receitaDoCardapio(item, meal) {
+  const original = meal ? originalDaApi(meal) : null;
+  const ingredientes = original
+    ? original.ingredientes.map((i) => {
+      // primeiro o nome exato; depois só o começo ("butter, softened" vira "butter")
+      const nome = i.nome.toLowerCase().trim();
+      const t = item.ingredientes[nome] || item.ingredientes[nome.split(',')[0].trim()];
+      return t ? { nome: t[0], medida: t[1] } : i;
+    })
+    : Object.values(item.ingredientes).map(([nome, medida]) => ({ nome, medida }));
   return {
-    id: 'mealdb-' + m.idMeal,
-    idApi: m.idMeal,
-    fonte: 'api',
-    completa: false,
-    nome: m.strMeal,
-    categoria: traduzirCategoria(categoriaApi),
-    origem: '',
-    imagem: m.strMealThumb || '',
-    ingredientes: [],
-    preparo: [],
-    video: '',
-    link: ''
+    id: 'cardapio-' + item.idApi,
+    fonte: 'cardapio',
+    nome: item.nome,
+    categoria: meal ? traduzirCategoria(meal.strCategory) : 'Variadas',
+    origem: meal ? traduzirOrigem(meal.strArea || meal.strCountry) : '',
+    arte: item.arte,
+    ingredientes,
+    preparo: item.preparo,
+    passos: item.passos,
+    original,
+    video: (meal && meal.strYoutube) || '',
+    link: (meal && meal.strSource) || ''
   };
 }
 
-async function receitasPorLetras(letras) {
-  const respostas = await Promise.all(letras.map((l) => buscarJSON(MEALDB + '/search.php?f=' + l)));
-  const vistas = new Set();
-  const lista = [];
-  respostas.forEach((json) => listaDeMeals(json).forEach((m) => {
-    if (vistas.has(m.idMeal)) return;
-    vistas.add(m.idMeal);
-    lista.push(receitaDaApi(m));
-  }));
-  return lista;
-}
-
-async function receitasPorNome(texto) {
-  const json = await buscarJSON(MEALDB + '/search.php?s=' + encodeURIComponent(texto));
-  return listaDeMeals(json).map(receitaDaApi);
-}
-
-async function receitasPorCategoria(categoriaApi) {
-  const json = await buscarJSON(MEALDB + '/filter.php?c=' + encodeURIComponent(categoriaApi));
-  return listaDeMeals(json).map((m) => resumoDaApi(m, categoriaApi));
-}
-
-async function receitaCompleta(idApi) {
-  const json = await buscarJSON(MEALDB + '/lookup.php?i=' + encodeURIComponent(idApi));
-  const m = listaDeMeals(json)[0];
-  if (!m) throw new ErroReceitas('Essa receita não existe mais na base.');
-  return receitaDaApi(m);
+// busca todos os pratos ao mesmo tempo; se a API falhar, o prato aparece só com a tradução
+async function carregarCardapio() {
+  const respostas = await Promise.allSettled(CARDAPIO.map((item) => buscarJSON(MEALDB + '/lookup.php?i=' + item.idApi)));
+  const receitas = CARDAPIO.map((item, i) => {
+    const r = respostas[i];
+    return receitaDoCardapio(item, r.status === 'fulfilled' ? listaDeMeals(r.value)[0] : null);
+  });
+  return { receitas, falhas: respostas.filter((r) => r.status === 'rejected').length };
 }

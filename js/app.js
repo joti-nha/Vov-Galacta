@@ -1,22 +1,22 @@
 /* =====================================================================
-   APP | estado global, navegação SPA, listagem, cadastro, personagem
-   e a cozinha (minigames + envio para o inventário do Vortex)
+   APP | estado global, navegação SPA, listagem, cadastro, conta
+   e a cozinha (a aula em minigames + envio para o inventário do Vortex)
    ===================================================================== */
 
 const CHAVE_RECEITAS = 'vovGalacta.receitas';
 const CHAVE_FICHA = 'vovGalacta.ficha';
-const LETRAS_INICIAIS = ['c', 'b', 'p'];
-const IMAGEM_PADRAO = 'img/prato.svg';
 
 // Estado global: tudo o que a página mostra sai daqui
 const estado = {
   secao: 'inicio',
-  receitasApi: [],     // o que veio da TheMealDB na última consulta
+  receitas: [],        // o cardápio: pratos da TheMealDB com tradução e aula
   cadastradas: [],     // receitas do formulário (salvas no navegador)
   filtro: { categoria: '', busca: '' },
   carregando: false,
-  ficha: null,         // personagem do Vortex que está cozinhando
-  sessao: null,        // login anônimo no Vortex (vortex-api.js)
+  conta: null,         // perfil do Vortex: { codigo, nome, fichas }
+  ficha: null,         // personagem do perfil que está cozinhando
+  sessao: null,        // login anônimo no Firebase do Vortex (vortex-api.js)
+  rascunhoPassos: [],  // a aula sendo montada no cadastro
   cozinha: null        // a aula em andamento
 };
 
@@ -49,7 +49,7 @@ function mostrarSecao(id, rolar) {
   });
   document.title = { inicio: 'Cozinha da Vó Galacta', receitas: 'Receitas | Cozinha da Vó Galacta', cadastro: 'Nova receita | Cozinha da Vó Galacta' }[alvo];
   if (rolar) window.scrollTo({ top: 0, behavior: 'auto' });
-  if (alvo === 'receitas' && !estado.receitasApi.length && !estado.carregando) carregarReceitas();
+  if (alvo === 'receitas' && !estado.receitas.length && !estado.carregando) carregarReceitas();
 }
 
 document.addEventListener('click', (ev) => {
@@ -63,135 +63,101 @@ document.addEventListener('click', (ev) => {
 
 window.addEventListener('popstate', () => mostrarSecao(location.hash.slice(1), true));
 
-/* ---------- Listagem (API + cadastradas) ---------- */
+/* ---------- Listagem (cardápio da API + cadastradas) ---------- */
 
-function montarFiltros() {
-  const caixa = $('#filtros');
-  const opcoes = [['', 'Todas'], ['casa', 'Da tripulação']].concat(Object.keys(CATEGORIAS).map((k) => [k, CATEGORIAS[k]]));
-  caixa.replaceChildren(...opcoes.map(([valor, nome]) => {
-    const b = botao(nome, 'filtro', () => escolherCategoria(valor));
-    b.dataset.valor = valor;
-    return b;
-  }));
-  marcarFiltro();
-}
-
-function marcarFiltro() {
-  $$('#filtros .filtro').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.valor === estado.filtro.categoria)));
-}
-
-async function consultar(promessa, aviso) {
+async function carregarReceitas() {
   estado.carregando = true;
-  $('#aviso-lista').textContent = aviso;
+  $('#aviso-lista').textContent = 'Folheando o caderno da Vó...';
   $('#grade-receitas').setAttribute('aria-busy', 'true');
   try {
-    estado.receitasApi = await promessa;
+    const { receitas, falhas } = await carregarCardapio();
+    estado.receitas = receitas;
     renderizarLista();
-  } catch (erro) {
-    estado.receitasApi = [];
-    renderizarLista();
-    $('#aviso-lista').replaceChildren(erro.message + ' ', botao('Tentar de novo', 'botao--texto', () => carregarReceitas()));
+    if (falhas) {
+      $('#aviso-lista').replaceChildren(
+        'A base de receitas não respondeu para ' + falhas + (falhas === 1 ? ' prato' : ' pratos') + ': eles aparecem só com a tradução. ',
+        botao('Tentar de novo', 'botao--texto', () => carregarReceitas()));
+    }
   } finally {
     estado.carregando = false;
     $('#grade-receitas').removeAttribute('aria-busy');
   }
 }
 
-function carregarReceitas() {
-  const { categoria, busca } = estado.filtro;
-  if (busca) return consultar(receitasPorNome(busca), 'Procurando "' + busca + '" no caderno...');
-  if (categoria && categoria !== 'casa') return consultar(receitasPorCategoria(categoria), 'Abrindo a página de ' + CATEGORIAS[categoria] + '...');
-  if (categoria === 'casa') { estado.receitasApi = []; renderizarLista(); return Promise.resolve(); }
-  return consultar(receitasPorLetras(LETRAS_INICIAIS), 'Folheando o caderno da Vó...');
+function todasAsReceitas() {
+  return estado.cadastradas.concat(estado.receitas);
 }
 
-function escolherCategoria(valor) {
-  estado.filtro.categoria = valor;
-  estado.filtro.busca = '';
-  $('#campo-busca').value = '';
-  marcarFiltro();
-  carregarReceitas();
+function montarFiltros() {
+  const categorias = [...new Set(todasAsReceitas().map((r) => r.categoria))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+  const opcoes = [['', 'Todas'], ['casa', 'Da tripulação']].concat(categorias.map((c) => [c, c]));
+  if (!opcoes.some(([v]) => v === estado.filtro.categoria)) estado.filtro.categoria = '';
+  $('#filtros').replaceChildren(...opcoes.map(([valor, nome]) => {
+    const b = botao(nome, 'filtro', () => {
+      estado.filtro.categoria = valor;
+      montarFiltros();
+      renderizarLista();
+    });
+    b.dataset.valor = valor;
+    b.setAttribute('aria-pressed', String(valor === estado.filtro.categoria));
+    return b;
+  }));
 }
 
 $('#form-busca').addEventListener('submit', (ev) => {
   ev.preventDefault();
   estado.filtro.busca = $('#campo-busca').value.trim();
-  estado.filtro.categoria = '';
-  marcarFiltro();
-  carregarReceitas();
+  renderizarLista();
 });
+
+// a busca olha o nome, o nome original e os ingredientes
+function combina(r, termo) {
+  if (!termo) return true;
+  const textos = [r.nome, r.original && r.original.nome].concat(r.ingredientes.map((i) => i.nome));
+  return textos.some((t) => t && chaveBusca(t).includes(termo));
+}
 
 function receitasVisiveis() {
   const { categoria, busca } = estado.filtro;
-  const termo = chaveTexto(busca);
-  const daCasa = estado.cadastradas.filter((r) => {
-    if (categoria === 'casa' || !categoria) return !termo || chaveTexto(r.nome).includes(termo);
-    return r.categoria === CATEGORIAS[categoria];
+  const termo = chaveBusca(busca);
+  return todasAsReceitas().filter((r) => {
+    if (categoria === 'casa' && r.fonte !== 'casa') return false;
+    if (categoria && categoria !== 'casa' && r.categoria !== categoria) return false;
+    return combina(r, termo);
   });
-  return categoria === 'casa' ? daCasa : daCasa.concat(estado.receitasApi);
 }
 
+const nomesDosJogos = (r) => r.passos.map((p) => JOGOS[p.jogo].nome).join(', ');
+
 function cartaoReceita(r) {
-  const img = h('img', 'cartao__foto');
-  img.src = r.imagem ? (r.fonte === 'api' ? r.imagem + '/preview' : r.imagem) : IMAGEM_PADRAO;
-  img.alt = '';
-  img.loading = 'lazy';
-  img.width = 300;
-  img.height = 300;
-  img.addEventListener('error', () => { img.src = IMAGEM_PADRAO; }, { once: true });
-
   const resumo = [r.categoria, r.origem].filter(Boolean).join(', ');
-  const detalhe = r.completa ? r.ingredientes.length + ' ingredientes' : 'Toque para ver os ingredientes';
-  const ver = botao('Ver receita', 'botao--linha botao--pequeno', () => abrirReceita(r));
-
   return h('article', 'cartao' + (r.fonte === 'casa' ? ' cartao--casa' : ''),
-    img,
+    h('div', 'cartao__arte', pixelCanvas(r.arte, 192)),
     h('div', 'cartao__corpo',
       r.fonte === 'casa' ? h('p', 'selo', 'Da tripulação') : null,
       h('h3', 'cartao__nome', r.nome),
       h('p', 'cartao__resumo', resumo),
-      h('p', 'cartao__detalhe', detalhe),
-      ver));
+      h('p', 'cartao__detalhe', 'Aula de ' + r.passos.length + ' passos: ' + nomesDosJogos(r) + '.'),
+      botao('Ver detalhes', 'botao--linha botao--pequeno', () => abrirReceita(r))));
 }
 
 function renderizarLista() {
+  montarFiltros();
   const lista = receitasVisiveis();
-  const grade = $('#grade-receitas');
-  grade.replaceChildren(...lista.map(cartaoReceita));
+  $('#grade-receitas').replaceChildren(...lista.map(cartaoReceita));
   const { categoria, busca } = estado.filtro;
   let aviso = lista.length + (lista.length === 1 ? ' receita' : ' receitas');
-  if (busca) aviso += ' para "' + busca + '"';
-  else if (categoria === 'casa') aviso += ' da tripulação';
-  else if (categoria) aviso += ' de ' + CATEGORIAS[categoria];
+  if (busca) aviso += ' com "' + busca + '"';
+  if (categoria === 'casa') aviso += ' da tripulação';
+  else if (categoria) aviso += ' em ' + categoria;
   if (!lista.length) {
-    aviso = busca
-      ? 'Nada com "' + busca + '". A base está em inglês: tente "chicken", "cake" ou "soup".'
-      : categoria === 'casa' ? 'Ninguém cadastrou receita ainda. Que tal ser a primeira?' : 'Nenhuma receita nesta página.';
+    aviso = busca ? 'Nada com "' + busca + '" no caderno.'
+      : categoria === 'casa' ? 'Ninguém da tripulação cadastrou receita ainda. Que tal ser a primeira pessoa?' : 'Nenhuma receita por aqui.';
   }
   $('#aviso-lista').textContent = aviso;
 }
 
 /* ---------- Detalhe da receita ---------- */
-
-async function abrirReceita(r) {
-  const dialogo = $('#dialogo-receita');
-  const corpo = $('#receita-corpo');
-  let receita = r;
-  if (!r.completa) {
-    corpo.replaceChildren(h('p', 'carregando', 'Abrindo a receita...'));
-    if (!dialogo.open) dialogo.showModal();
-    try {
-      receita = await receitaCompleta(r.idApi);
-      const i = estado.receitasApi.findIndex((x) => x.id === r.id);
-      if (i >= 0) estado.receitasApi[i] = receita;
-    } catch (erro) {
-      corpo.replaceChildren(topoDialogo(r.nome, 'receita-titulo'), h('p', 'mensagem mensagem--erro', erro.message));
-      return;
-    }
-  }
-  desenharReceita(receita);
-  if (!dialogo.open) dialogo.showModal();
-}
 
 function topoDialogo(titulo, id) {
   const t = h('h2', '', titulo);
@@ -203,51 +169,76 @@ function topoDialogo(titulo, id) {
   return h('div', 'dialogo__topo', t, fechar);
 }
 
-function desenharReceita(r) {
+function abrirReceita(r) {
+  desenharReceita(r, false);
+  const dialogo = $('#dialogo-receita');
+  if (!dialogo.open) dialogo.showModal();
+}
+
+function desenharReceita(r, verOriginal) {
   const dif = dificuldadeDaReceita(r);
-  const img = h('img', 'receita__foto');
-  img.src = r.imagem || IMAGEM_PADRAO;
-  img.alt = 'Foto do prato ' + r.nome;
-  img.addEventListener('error', () => { img.src = IMAGEM_PADRAO; }, { once: true });
+  const texto = verOriginal ? r.original : r;
 
   const fatos = h('dl', 'receita__fatos',
     h('dt', '', 'Categoria'), h('dd', '', r.categoria),
     r.origem ? [h('dt', '', 'Origem'), h('dd', '', r.origem)] : null,
     h('dt', '', 'Dificuldade'), h('dd', '', dif.nome + ' (CD ' + dif.cd + ')'));
 
-  const ingredientes = h('ul', 'receita__ingredientes', ...r.ingredientes.map((i) =>
+  const ingredientes = h('ul', 'receita__ingredientes', ...texto.ingredientes.map((i) =>
     h('li', '', h('span', '', i.nome), i.medida ? h('span', 'medida', i.medida) : null)));
 
-  const preparo = h('div', 'receita__preparo', ...r.preparo.map((p) => h('p', '', p)));
+  const aula = h('ol', 'receita__aula', ...r.passos.map((p) =>
+    h('li', '', h('strong', '', JOGOS[p.jogo].nome), ' ', p.texto)));
+
   const links = [];
   if (r.video) { const a = h('a', '', 'Vídeo da receita'); a.href = r.video; a.target = '_blank'; a.rel = 'noopener'; links.push(a); }
   if (r.link) { const a = h('a', '', 'Receita original'); a.href = r.link; a.target = '_blank'; a.rel = 'noopener'; links.push(a); }
+
+  let alternar = null;
+  if (r.fonte === 'cardapio') {
+    alternar = r.original
+      ? botao(verOriginal ? 'Ver tradução' : 'Ver original (inglês)', 'botao--linha botao--pequeno', () => desenharReceita(r, !verOriginal))
+      : h('p', 'campo__dica', 'O texto original não carregou: a base de receitas não respondeu.');
+  }
 
   const cozinhar = botao(estado.ficha ? 'Cozinhar com ' + estado.ficha.nome : 'Cozinhar com a Vó', 'botao--principal', () => {
     $('#dialogo-receita').close();
     abrirCozinha(r);
   });
+  const dica = estado.ficha ? 'O prato pronto vai para o inventário de ' + estado.ficha.nome + '.'
+    : estado.conta ? 'Escolha um personagem na sua conta para guardar o prato.' : 'Entre com a conta do Vortex para guardar o prato no inventário.';
 
   $('#receita-corpo').replaceChildren(
-    topoDialogo(r.nome, 'receita-titulo'),
+    topoDialogo(texto.nome, 'receita-titulo'),
     h('div', 'receita',
-      h('div', 'receita__lado', img, fatos, h('div', 'receita__acao', cozinhar,
-        h('p', 'campo__dica', estado.ficha ? 'O prato pronto vai para o inventário de ' + estado.ficha.nome + '.' : 'Escolha um personagem do Vortex para guardar o prato no inventário.'))),
+      h('div', 'receita__lado',
+        h('div', 'receita__arte', pixelCanvas(r.arte, 256)),
+        fatos,
+        h('div', 'receita__acao', cozinhar, h('p', 'campo__dica', dica))),
       h('div', 'receita__texto',
+        alternar ? h('div', 'receita__idioma', alternar) : null,
         h('h3', '', 'Ingredientes'), ingredientes,
         h('h3', '', 'Modo de preparo'),
-        r.fonte === 'api' ? h('p', 'campo__dica', 'Texto original da TheMealDB, em inglês.') : null,
-        preparo,
+        h('div', 'receita__preparo', ...texto.preparo.map((p) => h('p', '', p))),
+        h('h3', '', 'A aula, passo a passo'), aula,
         links.length ? h('p', 'receita__links', ...links) : null)));
 }
 
-/* ---------- Cadastro ---------- */
+/* ---------- Cadastro: a receita e a aula ---------- */
 
 function lerCadastradas() {
   try {
     const lista = JSON.parse(localStorage.getItem(CHAVE_RECEITAS));
-    return Array.isArray(lista) ? lista : [];
+    return Array.isArray(lista) ? lista.map(normalizarCadastrada) : [];
   } catch (e) { return []; }
+}
+
+// receitas salvas antes da pixel art e da aula ganham as duas
+function normalizarCadastrada(r) {
+  return Object.assign({ fonte: 'casa', origem: '', original: null, video: '', link: '' }, r, {
+    arte: SPRITES[r.arte] ? r.arte : SPRITE_PADRAO,
+    passos: Array.isArray(r.passos) && r.passos.length ? r.passos : sugerirPassos(r.preparo || [], (r.ingredientes || []).map((i) => i.nome))
+  });
 }
 
 function salvarCadastradas() {
@@ -260,6 +251,17 @@ function montarCategoriasDoFormulario() {
   sel.firstChild.value = '';
 }
 
+function montarArtes() {
+  $('#r-artes').replaceChildren(...Object.keys(SPRITES).map((chave, i) => {
+    const radio = h('input');
+    radio.type = 'radio';
+    radio.name = 'arte';
+    radio.value = chave;
+    radio.defaultChecked = i === 0;
+    return h('label', 'arte', radio, pixelCanvas(chave, 64), h('span', '', SPRITES[chave].nome));
+  }));
+}
+
 function lerIngredientes(texto) {
   return texto.split('\n').map((linha) => linha.trim()).filter(Boolean).map((linha) => {
     const partes = linha.split(/\s+[-–—]\s+/);
@@ -267,29 +269,130 @@ function lerIngredientes(texto) {
   });
 }
 
+/* o rascunho guarda um "detalhe" de texto por passo; ao salvar ele vira o campo do jogo */
+function passoDoRascunho(p) {
+  const passo = { jogo: p.jogo, texto: p.texto.trim() };
+  const d = p.detalhe.trim();
+  if (p.jogo === 'separar' && d) passo.itens = lista(d);
+  if (p.jogo === 'cortar' && d) passo.alvo = d;
+  if (p.jogo === 'medir' && d) passo.alvo = d;
+  if (p.jogo === 'fogo') passo.fogo = FOGOS[d] ? d : 'medio';
+  if (p.jogo === 'montar') passo.camadas = lista(d);
+  return passo;
+}
+
+function rascunhoDoPasso(p) {
+  const detalhe = p.jogo === 'fogo' ? (p.fogo || 'medio') : p.itens ? lista(p.itens).join(', ') : p.camadas ? lista(p.camadas).join(', ') : p.alvo || '';
+  return { jogo: p.jogo, texto: p.texto || '', detalhe };
+}
+
+const PASSOS_INICIAIS = () => [
+  { jogo: 'separar', texto: 'Separe os ingredientes.', detalhe: '' },
+  { jogo: 'misturar', texto: '', detalhe: '' }
+];
+
+function renderizarPassos() {
+  const passos = estado.rascunhoPassos;
+  $('#r-passos').replaceChildren(...passos.map((p, i) => {
+    const jogo = h('select', 'passo__jogo', ...Object.keys(JOGOS).map((k) => {
+      const o = h('option', '', JOGOS[k].nome);
+      o.value = k;
+      o.title = JOGOS[k].faz;
+      o.selected = k === p.jogo;
+      return o;
+    }));
+    jogo.setAttribute('aria-label', 'Minigame do passo ' + (i + 1));
+    jogo.addEventListener('change', () => { p.jogo = jogo.value; p.detalhe = p.jogo === 'fogo' ? 'medio' : ''; renderizarPassos(); });
+
+    const texto = h('input', 'passo__texto');
+    texto.value = p.texto;
+    texto.placeholder = 'O que fazer neste passo (ex.: Pique a cebola)';
+    texto.maxLength = 120;
+    texto.setAttribute('aria-label', 'O que fazer no passo ' + (i + 1));
+    texto.addEventListener('input', () => { p.texto = texto.value; });
+
+    let detalhe = null;
+    const tipo = JOGOS[p.jogo].detalhe;
+    if (tipo === 'fogo') {
+      detalhe = h('select', 'passo__detalhe', ...Object.keys(FOGOS).map((k) => {
+        const o = h('option', '', FOGOS[k].nome.charAt(0).toUpperCase() + FOGOS[k].nome.slice(1));
+        o.value = k;
+        o.selected = k === p.detalhe;
+        return o;
+      }));
+      detalhe.setAttribute('aria-label', 'Intensidade do fogo no passo ' + (i + 1));
+      detalhe.addEventListener('change', () => { p.detalhe = detalhe.value; });
+    } else if (tipo) {
+      detalhe = h('input', 'passo__detalhe');
+      detalhe.value = p.detalhe;
+      detalhe.placeholder = tipo;
+      detalhe.setAttribute('aria-label', tipo + ' (passo ' + (i + 1) + ')');
+      detalhe.addEventListener('input', () => { p.detalhe = detalhe.value; });
+    }
+
+    const mover = (de, para) => { passos.splice(para, 0, passos.splice(de, 1)[0]); renderizarPassos(); };
+    const subir = botao('↑', 'botao--icone', () => mover(i, i - 1));
+    subir.disabled = i === 0;
+    subir.setAttribute('aria-label', 'Subir o passo ' + (i + 1));
+    const descer = botao('↓', 'botao--icone', () => mover(i, i + 1));
+    descer.disabled = i === passos.length - 1;
+    descer.setAttribute('aria-label', 'Descer o passo ' + (i + 1));
+    const tirar = botao('×', 'botao--icone', () => { passos.splice(i, 1); renderizarPassos(); });
+    tirar.setAttribute('aria-label', 'Tirar o passo ' + (i + 1));
+
+    return h('li', 'passo', h('div', 'passo__campos', jogo, texto, detalhe), h('div', 'passo__botoes', subir, descer, tirar));
+  }));
+  $('#r-mais-passo').disabled = passos.length >= 8;
+}
+
+$('#r-mais-passo').addEventListener('click', () => {
+  estado.rascunhoPassos.push({ jogo: 'cortar', texto: '', detalhe: '' });
+  renderizarPassos();
+  $$('#r-passos .passo__texto').pop().focus();
+});
+
+$('#r-sugerir').addEventListener('click', () => {
+  const preparo = $('#r-preparo').value.split('\n').map((p) => p.trim()).filter(Boolean);
+  if (!preparo.length) {
+    $('#erro-passos').textContent = 'Escreva o modo de preparo primeiro: a sugestão sai dos verbos de cada linha.';
+    $('#r-preparo').focus();
+    return;
+  }
+  const nomes = lerIngredientes($('#r-ingredientes').value).map((i) => i.nome);
+  estado.rascunhoPassos = sugerirPassos(preparo, nomes).map(rascunhoDoPasso);
+  $('#erro-passos').textContent = '';
+  renderizarPassos();
+  avisar('Aula sugerida com ' + estado.rascunhoPassos.length + ' passos. Confira e ajuste o que quiser.');
+});
+
 function validarReceita(dados) {
   const erros = {};
   if (dados.nome.length < 3) erros.nome = 'Dê um nome com pelo menos 3 letras.';
-  else if (estado.cadastradas.some((r) => chaveTexto(r.nome) === chaveTexto(dados.nome))) erros.nome = 'Já existe uma receita sua com esse nome.';
+  else if (todasAsReceitas().some((r) => chaveBusca(r.nome) === chaveBusca(dados.nome))) erros.nome = 'Já existe uma receita com esse nome no caderno.';
   if (!dados.categoria) erros.categoria = 'Escolha a categoria do prato.';
-  if (dados.imagem && !/^https?:\/\/\S+$/i.test(dados.imagem)) erros.imagem = 'O link precisa começar com http:// ou https://.';
   if (dados.ingredientes.length < 2) erros.ingredientes = 'Liste pelo menos 2 ingredientes, um por linha.';
   if (dados.preparo.join(' ').length < 30) erros.preparo = 'Explique o preparo com pelo menos 30 caracteres.';
+  const passos = dados.passos;
+  const semTexto = passos.findIndex((p) => p.texto.length < 3);
+  const montarCurto = passos.findIndex((p) => p.jogo === 'montar' && p.camadas.length < 2);
+  if (passos.length < 2) erros.passos = 'Monte pelo menos 2 passos na aula.';
+  else if (semTexto >= 0) erros.passos = 'Diga o que fazer no passo ' + (semTexto + 1) + '.';
+  else if (montarCurto >= 0) erros.passos = 'No passo ' + (montarCurto + 1) + ', liste pelo menos 2 camadas para montar, separadas por vírgula.';
   return erros;
 }
 
 function mostrarErros(erros) {
-  ['nome', 'categoria', 'imagem', 'ingredientes', 'preparo'].forEach((campo) => {
-    const entrada = $('#r-' + campo);
+  ['nome', 'categoria', 'ingredientes', 'preparo'].forEach((campo) => {
     $('#erro-' + campo).textContent = erros[campo] || '';
-    entrada.setAttribute('aria-invalid', String(Boolean(erros[campo])));
+    $('#r-' + campo).setAttribute('aria-invalid', String(Boolean(erros[campo])));
   });
+  $('#erro-passos').textContent = erros.passos || '';
 }
 
 function mensagemCadastro(texto, tipo, extra) {
   const caixa = $('#mensagem-cadastro');
   caixa.className = 'mensagem mensagem--' + tipo;
-  caixa.replaceChildren(h('span', '', texto), extra || null);
+  caixa.replaceChildren(...[h('span', '', texto), extra].filter(Boolean));
   caixa.hidden = false;
 }
 
@@ -300,9 +403,10 @@ $('#form-receita').addEventListener('submit', (ev) => {
     nome: form.nome.value.replace(/\s+/g, ' ').trim(),
     categoria: form.categoria.value,
     origem: form.origem.value.trim(),
-    imagem: form.imagem.value.trim(),
+    arte: form.arte.value,
     ingredientes: lerIngredientes(form.ingredientes.value),
-    preparo: form.preparo.value.split('\n').map((p) => p.trim()).filter(Boolean)
+    preparo: form.preparo.value.split('\n').map((p) => p.trim()).filter(Boolean),
+    passos: estado.rascunhoPassos.map(passoDoRascunho)
   };
 
   const erros = validarReceita(dados);
@@ -310,26 +414,36 @@ $('#form-receita').addEventListener('submit', (ev) => {
   const campos = Object.keys(erros);
   if (campos.length) {
     mensagemCadastro(campos.length === 1 ? 'Falta corrigir 1 campo.' : 'Falta corrigir ' + campos.length + ' campos.', 'erro');
-    $('#r-' + campos[0]).focus();
+    const primeiro = campos[0] === 'passos' ? $('#r-passos input, #r-passos select') || $('#r-mais-passo') : $('#r-' + campos[0]);
+    primeiro.focus();
     return;
   }
 
-  const receita = Object.assign(dados, { id: 'casa-' + novoUid(), fonte: 'casa', completa: true, video: '', link: '' });
+  const receita = normalizarCadastrada(Object.assign(dados, { id: 'casa-' + novoUid() }));
   estado.cadastradas.unshift(receita);
   salvarCadastradas();
   renderizarLista();
   renderizarCadastradas();
   form.reset();
-  mensagemCadastro(receita.nome + ' entrou no caderno.', 'sucesso',
-    h('a', '', 'Ver na listagem'));
-  const ver = $('#mensagem-cadastro a');
+  const ver = h('a', '', 'Ver na listagem');
   ver.href = '#receitas';
   ver.dataset.secao = 'receitas';
+  mensagemCadastro(receita.nome + ' entrou no caderno, com uma aula de ' + receita.passos.length + ' passos.', 'sucesso', ver);
+});
+
+// o erro de um campo some assim que ele é corrigido
+$('#form-receita').addEventListener('input', (ev) => {
+  const campo = ev.target.id && ev.target.id.replace('r-', '');
+  const erro = campo && document.getElementById('erro-' + campo);
+  if (erro && erro.textContent) { erro.textContent = ''; ev.target.setAttribute('aria-invalid', 'false'); }
+  if (ev.target.closest('#r-passos')) $('#erro-passos').textContent = '';
 });
 
 $('#form-receita').addEventListener('reset', () => {
   mostrarErros({});
   $('#mensagem-cadastro').hidden = true;
+  estado.rascunhoPassos = PASSOS_INICIAIS();
+  renderizarPassos();
 });
 
 function renderizarCadastradas() {
@@ -347,27 +461,19 @@ function renderizarCadastradas() {
       avisar(r.nome + ' saiu do caderno.');
     });
     apagar.setAttribute('aria-label', 'Apagar ' + r.nome);
-    return h('li', '', abrir, h('span', 'lista-casa__cat', r.categoria), apagar);
+    return h('li', '', pixelCanvas(r.arte, 32), abrir, h('span', 'lista-casa__cat', r.categoria), apagar);
   }));
 }
 
-/* ---------- Personagem do Vortex ---------- */
+/* ---------- Conta do Vortex, personagem e tema ---------- */
 
 function desenharCozinheiro() {
-  const f = estado.ficha;
-  $('#cozinheiro-rotulo').textContent = f ? 'Cozinhando com' : 'Quem vai cozinhar?';
-  $('#cozinheiro-nome').textContent = f ? f.nome : 'Escolher personagem';
+  const { conta, ficha } = estado;
+  $('#cozinheiro-rotulo').textContent = ficha ? 'Cozinhando com' : conta ? conta.nome : 'Conta do Vortex';
+  $('#cozinheiro-nome').textContent = ficha ? ficha.nome : conta ? 'Escolher personagem' : 'Entrar';
   const foto = $('#cozinheiro-foto');
-  foto.style.backgroundImage = f && f.foto ? 'url("' + f.foto + '")' : '';
-  foto.textContent = f && !f.foto ? f.nome.charAt(0).toUpperCase() : '';
-  $('#sair-personagem').hidden = !f;
-}
-
-function guardarFicha() {
-  try {
-    if (estado.ficha) localStorage.setItem(CHAVE_FICHA, JSON.stringify(estado.ficha));
-    else localStorage.removeItem(CHAVE_FICHA);
-  } catch (e) { /* sem armazenamento */ }
+  foto.style.backgroundImage = ficha && ficha.foto ? 'url("' + ficha.foto + '")' : '';
+  foto.textContent = ficha && !ficha.foto ? ficha.nome.charAt(0).toUpperCase() : '';
 }
 
 function textoTeste(f) {
@@ -375,70 +481,116 @@ function textoTeste(f) {
   return 'Teste: 2d6 + Precisão ' + f.precisao + of;
 }
 
-function mostrarFichas(fichas, vazio) {
-  const lista = $('#lista-fichas');
-  $('#aviso-personagem').textContent = fichas.length ? '' : vazio;
-  lista.replaceChildren(...fichas.map((f) => {
+function escolherFicha(f) {
+  estado.ficha = f;
+  try { if (f) localStorage.setItem(CHAVE_FICHA, f.id); else localStorage.removeItem(CHAVE_FICHA); } catch (e) { /* sem armazenamento */ }
+  desenharCozinheiro();
+  desenharConta();
+}
+
+function desenharConta() {
+  const { conta } = estado;
+  $('#conta-fora').hidden = Boolean(conta);
+  $('#conta-dentro').hidden = !conta;
+  if (!conta) return;
+  $('#conta-nome').textContent = conta.nome;
+  $('#conta-codigo').textContent = '(código ' + conta.codigo + ')';
+
+  $('#lista-fichas').replaceChildren(...(conta.fichas.length ? conta.fichas.map((f) => {
+    const atual = estado.ficha && estado.ficha.id === f.id;
     const foto = h('span', 'ficha__foto', f.foto ? '' : f.nome.charAt(0).toUpperCase());
     if (f.foto) foto.style.backgroundImage = 'url("' + f.foto + '")';
-    const escolher = botao('Cozinhar com ' + f.nome, 'botao--principal botao--pequeno', () => {
-      estado.ficha = f;
-      guardarFicha();
-      desenharCozinheiro();
-      $('#dialogo-personagem').close();
+    const escolher = botao(atual ? 'Na cozinha' : 'Cozinhar com ' + f.nome, atual ? 'botao--linha botao--pequeno' : 'botao--principal botao--pequeno', () => {
+      escolherFicha(f);
+      $('#dialogo-conta').close();
       avisar(f.nome + ' está na cozinha. ' + (f.culinaria ? 'O Ofício de culinária entra no teste.' : 'Sem Ofício de culinária, vale só a Precisão.'));
       if (estado.cozinha && estado.cozinha.aguardandoFicha) estado.cozinha.aguardandoFicha();
     });
-    return h('li', 'ficha' + (estado.ficha && estado.ficha.id === f.id ? ' is-atual' : ''),
+    escolher.disabled = atual;
+    return h('li', 'ficha' + (atual ? ' is-atual' : ''),
       foto,
       h('div', 'ficha__texto',
         h('p', 'ficha__nome', f.nome),
         h('p', 'ficha__info', [f.tipo, f.especie, f.itens + (f.itens === 1 ? ' item' : ' itens')].filter(Boolean).join(', ')),
         h('p', 'ficha__teste', textoTeste(f) + (f.profissao && !f.culinaria ? ' (Ofício de ' + f.profissao + ' não conta)' : ''))),
       escolher);
-  }));
+  }) : [h('li', 'vazio', 'Este perfil ainda não tem personagens. Crie um no Vortex e entre de novo.')]));
+
+  desenharTemas();
 }
 
-async function procurarFichas(promessa, aviso, vazio) {
-  $('#aviso-personagem').textContent = aviso;
-  $('#lista-fichas').replaceChildren();
-  try {
-    mostrarFichas(await promessa, vazio);
-  } catch (erro) {
-    $('#aviso-personagem').textContent = erro.message;
+function desenharTemas() {
+  const ativo = document.documentElement.dataset.theme || '';
+  const liberados = temasLiberados();
+  $('#lista-temas').replaceChildren(...liberados.map((t) => {
+    const b = botao('', 'tema' + (t.id === ativo ? ' is-ativo' : ''), () => {
+      escolherTema(t.id);
+      desenharTemas();
+      avisar('Tema ' + t.nome + ' ligado aqui e no Vortex.');
+    });
+    b.dataset.tema = t.id;
+    b.setAttribute('role', 'radio');
+    b.setAttribute('aria-checked', String(t.id === ativo));
+    b.append(h('span', 'tema__amostra'), h('span', 'tema__nome', t.nome), h('span', 'tema__texto', t.texto));
+    return b;
+  }));
+  if (liberados.length === 1) {
+    $('#lista-temas').append(h('p', 'campo__dica', 'Os outros temas se desbloqueiam com segredos espalhados pelo Vortex.'));
   }
 }
 
-$('#form-perfil').addEventListener('submit', (ev) => {
+async function entrarNaConta(codigo, silencioso) {
+  const aviso = $('#aviso-conta');
+  if (!silencioso) aviso.textContent = 'Abrindo o perfil ' + codigo + '...';
+  try {
+    const conta = await abrirPerfil(codigo);
+    estado.conta = conta;
+    guardarConta(codigo);
+    let salva = '';
+    try { salva = localStorage.getItem(CHAVE_FICHA) || ''; } catch (e) { /* sem armazenamento */ }
+    estado.ficha = conta.fichas.find((f) => f.id === (estado.ficha ? estado.ficha.id : salva)) || (conta.fichas.length === 1 ? conta.fichas[0] : null);
+    aviso.textContent = '';
+    desenharCozinheiro();
+    desenharConta();
+    if (!silencioso) avisar('Você entrou como ' + conta.nome + '.');
+  } catch (erro) {
+    if (silencioso) return;
+    aviso.textContent = erro.message;
+  }
+}
+
+function sairDaConta() {
+  estado.conta = null;
+  guardarConta('');
+  escolherFicha(null);
+  avisar('Você saiu da conta aqui e no Vortex.');
+}
+
+$('#form-conta').addEventListener('submit', (ev) => {
   ev.preventDefault();
-  const codigo = $('#campo-perfil').value.trim();
-  if (!/^\d{1,6}$/.test(codigo)) { $('#aviso-personagem').textContent = 'O código do perfil tem de 1 a 6 números.'; return; }
-  procurarFichas(fichasDoPerfil(codigo), 'Abrindo o perfil ' + codigo + '...', 'Esse perfil ainda não tem personagens.');
+  const codigo = $('#campo-conta').value.trim();
+  if (!/^\d{1,6}$/.test(codigo)) { $('#aviso-conta').textContent = 'O código do perfil tem de 1 a 6 números.'; return; }
+  entrarNaConta(codigo, false);
 });
 
-$('#form-nome').addEventListener('submit', (ev) => {
-  ev.preventDefault();
-  const nome = $('#campo-nome').value.trim();
-  if (nome.length < 2) { $('#aviso-personagem').textContent = 'Digite pelo menos 2 letras do nome.'; return; }
-  procurarFichas(fichasPeloNome(nome), 'Procurando "' + nome + '" no Vortex...', 'Nenhuma ficha com "' + nome + '".');
+$('#sair-conta').addEventListener('click', sairDaConta);
+$('#abrir-conta').addEventListener('click', () => { desenharConta(); $('#dialogo-conta').showModal(); });
+
+// o Vortex aberto em outra aba trocou de tema ou de conta: este site acompanha
+window.addEventListener('storage', (ev) => {
+  if (ev.key === CHAVE_TEMAS_VORTEX) { aplicarTema(); if (estado.conta) desenharTemas(); }
+  if (ev.key === CHAVE_PERFIL_VORTEX) {
+    const codigo = codigoDaConta();
+    if (codigo && (!estado.conta || estado.conta.codigo !== codigo)) entrarNaConta(codigo, true);
+    if (!codigo && estado.conta) { estado.conta = null; escolherFicha(null); }
+  }
 });
 
-$('#abrir-personagem').addEventListener('click', () => $('#dialogo-personagem').showModal());
+/* ---------- Cozinha: um minigame por passo, o teste e o prato ---------- */
 
-$('#sair-personagem').addEventListener('click', () => {
-  estado.ficha = null;
-  guardarFicha();
-  desenharCozinheiro();
-  $('#lista-fichas').replaceChildren();
-  avisar('Agora você cozinha sem personagem. O prato não vai para nenhum inventário.');
-});
-
-/* ---------- Cozinha: três jogos, o teste e o prato ---------- */
-
-const ETAPAS = ['Ingredientes', 'Corte', 'Fogo', 'Prato'];
-
-function desenharEtapas(atual) {
-  return h('ol', 'etapas', ...ETAPAS.map((nome, i) => {
+function desenharEtapas(receita, atual) {
+  const nomes = receita.passos.map((p) => JOGOS[p.jogo].nome).concat('Prato');
+  return h('ol', 'etapas', ...nomes.map((nome, i) => {
     const li = h('li', i < atual ? 'is-feita' : i === atual ? 'is-atual' : '', nome);
     if (i === atual) li.setAttribute('aria-current', 'step');
     return li;
@@ -448,6 +600,7 @@ function desenharEtapas(atual) {
 async function abrirCozinha(receita) {
   const dialogo = $('#dialogo-cozinha');
   const corpo = $('#cozinha-corpo');
+  if (estado.cozinha) estado.cozinha.controle.abort();
   const controle = new AbortController();
   estado.cozinha = { receita, controle, notas: [] };
   dialogo.addEventListener('close', () => controle.abort(), { once: true });
@@ -457,14 +610,14 @@ async function abrirCozinha(receita) {
   corpo.replaceChildren(topoDialogo('Aula: ' + receita.nome, 'cozinha-titulo'), etapas, area);
   if (!dialogo.open) dialogo.showModal();
 
-  const jogos = [jogoIngredientes, jogoCorte, jogoFogo];
-  for (let i = 0; i < jogos.length; i++) {
-    etapas.replaceChildren(desenharEtapas(i));
-    const nota = await jogos[i](area, receita, controle.signal);
+  for (let i = 0; i < receita.passos.length; i++) {
+    const passo = receita.passos[i];
+    etapas.replaceChildren(desenharEtapas(receita, i));
+    const nota = await JOGOS[passo.jogo].jogar(area, receita, passo, controle.signal);
     if (controle.signal.aborted) return;
     estado.cozinha.notas.push(nota);
   }
-  etapas.replaceChildren(desenharEtapas(3));
+  etapas.replaceChildren(desenharEtapas(receita, receita.passos.length));
   telaDoTeste(area, receita);
 }
 
@@ -481,12 +634,11 @@ function telaDoTeste(area, receita) {
   const dif = dificuldadeDaReceita(receita);
   const f = estado.ficha;
 
-  const resumoJogos = h('ul', 'notas', ...['Ingredientes', 'Corte', 'Fogo'].map((n, i) =>
-    h('li', '', h('span', '', n), h('strong', '', notas[i]))));
+  const resumoJogos = h('ul', 'notas', ...receita.passos.map((p, i) =>
+    h('li', '', h('span', '', (i + 1) + '. ' + JOGOS[p.jogo].nome), h('strong', '', notas[i]))));
 
   const rolar = botao('Rolar o teste de culinária', 'botao--principal botao--grande', () => {
-    const teste = testeDeCulinaria(f, bonus);
-    mostrarResultado(area, receita, teste, dif, media);
+    mostrarResultado(area, receita, testeDeCulinaria(f, bonus), dif, media);
   });
 
   area.replaceChildren(h('div', 'jogo',
@@ -500,16 +652,15 @@ function telaDoTeste(area, receita) {
 }
 
 function mostrarResultado(area, receita, teste, dif, media) {
-  const f = estado.ficha;
   const partes = [teste.dados[0] + ' + ' + teste.dados[1]];
   if (teste.atributo) partes.push('Precisão ' + teste.atributo);
-  if (teste.pericia) partes.push(teste.perda ? 'Ofício anulado pela perda' : 'Ofício ' + teste.pericia);
+  if (teste.pericia && !teste.perda) partes.push('Ofício ' + teste.pericia);
   if (teste.critico && teste.atributo) partes.push('crítico +' + teste.atributo);
   if (teste.bonus) partes.push('cozinha +' + teste.bonus);
 
   const conta = h('div', 'rolagem',
     h('div', 'rolagem__dados', ...teste.dados.map(dadoDesenhado)),
-    h('p', 'rolagem__conta', partes.join(' + ').replace('+ Ofício anulado', '· Ofício anulado')),
+    h('p', 'rolagem__conta', partes.join(' + ') + (teste.pericia && teste.perda ? ' (o 1 anulou o Ofício)' : '')),
     h('p', 'rolagem__total', h('strong', '', teste.total), ' contra CD ' + dif.cd));
 
   const denovo = botao('Cozinhar de novo', 'botao--linha', () => abrirCozinha(receita));
@@ -526,9 +677,11 @@ function mostrarResultado(area, receita, teste, dif, media) {
   const q = qualidadeDoPrato(teste, dif.cd);
   const rec = '+' + q.pv + ' PV' + (q.pe ? ', +' + q.pe + ' PE' : '');
   const prato = h('div', 'prato prato--' + chaveBusca(q.raridade),
-    h('p', 'prato__raridade', q.raridade === 'Epica' ? 'Épica' : q.raridade),
-    h('p', 'prato__nome', q.min < 1 ? receita.nome + ' (passou do ponto)' : receita.nome),
-    h('p', 'prato__info', 'Item geral, consumível, 2 porções, carga 0,25. Bônus de recuperação: ' + rec + '.'));
+    pixelCanvas(receita.arte, 96),
+    h('div', '',
+      h('p', 'prato__raridade', q.raridade === 'Epica' ? 'Épica' : q.raridade),
+      h('p', 'prato__nome', q.min < 1 ? receita.nome + ' (passou do ponto)' : receita.nome),
+      h('p', 'prato__info', 'Item geral, consumível, 2 porções, carga 0,25. Bônus de recuperação: ' + rec + '.')));
 
   const acoes = h('div', 'jogo__acoes');
   const retorno = h('p', 'jogo__retorno');
@@ -555,16 +708,18 @@ function mostrarResultado(area, receita, teste, dif, media) {
     return enviar;
   }
 
-  if (f) {
+  if (estado.ficha) {
     acoes.append(botaoEnviar(), denovo);
   } else {
-    const escolher = botao('Escolher personagem para levar o prato', 'botao--principal', () => $('#dialogo-personagem').showModal());
-    estado.cozinha.aguardandoFicha = () => { escolher.replaceWith(botaoEnviar()); };
-    acoes.append(escolher, denovo);
+    const entrar = botao(estado.conta ? 'Escolher personagem para levar o prato' : 'Entrar na conta para levar o prato', 'botao--principal', () => {
+      desenharConta();
+      $('#dialogo-conta').showModal();
+    });
+    estado.cozinha.aguardandoFicha = () => { entrar.replaceWith(botaoEnviar()); };
+    acoes.append(entrar, denovo);
   }
 
-  area.replaceChildren(h('div', 'jogo',
-    h('h3', 'jogo__titulo', q.titulo), conta, prato, retorno, acoes));
+  area.replaceChildren(h('div', 'jogo', h('h3', 'jogo__titulo', q.titulo), conta, prato, retorno, acoes));
   acoes.firstChild.focus();
 }
 
@@ -579,12 +734,17 @@ $$('dialog').forEach((d) => {
 /* ---------- Início ---------- */
 
 function iniciar() {
+  aplicarTema();
   estado.cadastradas = lerCadastradas();
-  try { estado.ficha = JSON.parse(localStorage.getItem(CHAVE_FICHA)) || null; } catch (e) { estado.ficha = null; }
-  montarFiltros();
+  estado.rascunhoPassos = PASSOS_INICIAIS();
   montarCategoriasDoFormulario();
+  montarArtes();
+  renderizarPassos();
   renderizarCadastradas();
+  renderizarLista();
   desenharCozinheiro();
+  const codigo = codigoDaConta();
+  if (codigo) entrarNaConta(codigo, true);
   mostrarSecao(location.hash.slice(1) || 'inicio', false);
 }
 

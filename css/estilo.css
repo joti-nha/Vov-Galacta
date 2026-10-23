@@ -1,24 +1,31 @@
 /* =====================================================================
    COZINHA DA VÓ GALACTA | estilo
    Paleta do Vortex (tempestade e lanterna) com o calor de uma cozinha:
-   o âmbar é a chama do fogão, a maré é a água e o vapor.
-   Índice: 1 Base · 2 Topo e menu · 3 Botões e campos · 4 Início
-           5 Receitas · 6 Cadastro · 7 Diálogos · 8 Cozinha e jogos · 9 Celular
+   o âmbar é a chama do fogão, a maré é a água e o vapor. Os temas do
+   Vortex trocam as mesmas variáveis (seção 2).
+   Índice: 1 Base · 2 Temas do Vortex · 3 Topo e menu · 4 Botões e campos
+           5 Início · 6 Receitas · 7 Cadastro · 8 Diálogos e conta
+           9 Cozinha e jogos · 10 Celular
    ===================================================================== */
 
 /* ---------- 1. BASE ---------- */
 :root {
-  --abismo: #0f1c26;
+  --abismo: #0f1c26; --abismo-rgb: 15, 28, 38;
   --casco: #162836;
   --casco-2: #1d3345;
   --linha: #2b4457;
+  --linha-forte: #6f8fa5;
   --nevoa: #e9eff3;
   --nevoa-2: #9db2c1;
-  --ambar: #f0b85a;
+  --ambar: #f0b85a; --ambar-rgb: 240, 184, 90;
   --ambar-claro: #f6c978;
   --ambar-tinta: #2b1d05;
-  --mare: #63d6e8;
+  --mare: #63d6e8; --mare-rgb: 99, 214, 232;
   --erro: #ff9b88;
+  --fundo-extra: radial-gradient(1px 1px at 12% 18%, rgba(233, 239, 243, 0.5) 50%, transparent 51%),
+    radial-gradient(1px 1px at 68% 9%, rgba(233, 239, 243, 0.4) 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 86% 34%, rgba(var(--ambar-rgb), 0.5) 50%, transparent 51%),
+    radial-gradient(1px 1px at 34% 62%, rgba(233, 239, 243, 0.3) 50%, transparent 51%);
 
   --titulo: "Alegreya", Georgia, serif;
   --ui: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -37,12 +44,7 @@ html { color-scheme: dark; -webkit-text-size-adjust: 100%; }
 body {
   margin: 0;
   min-height: 100vh;
-  background:
-    radial-gradient(1px 1px at 12% 18%, rgba(233, 239, 243, 0.5) 50%, transparent 51%),
-    radial-gradient(1px 1px at 68% 9%, rgba(233, 239, 243, 0.4) 50%, transparent 51%),
-    radial-gradient(1.5px 1.5px at 86% 34%, rgba(240, 184, 90, 0.5) 50%, transparent 51%),
-    radial-gradient(1px 1px at 34% 62%, rgba(233, 239, 243, 0.3) 50%, transparent 51%),
-    var(--abismo);
+  background: var(--fundo-extra), var(--abismo);
   background-attachment: fixed;
   color: var(--nevoa);
   font-family: var(--ui);
@@ -55,6 +57,11 @@ p { margin: 0; }
 a { color: var(--mare); }
 a:hover { color: var(--nevoa); }
 img { max-width: 100%; display: block; }
+fieldset { margin: 0; padding: 0; border: 0; min-width: 0; }
+legend { padding: 0; font-weight: 700; }
+
+/* pixel art sem borrar ao ampliar */
+.pixel { display: block; image-rendering: pixelated; image-rendering: crisp-edges; }
 
 :focus-visible { outline: 3px solid var(--mare); outline-offset: 2px; }
 
@@ -72,12 +79,59 @@ img { max-width: 100%; display: block; }
 
 main { width: min(100%, var(--largura)); margin: 0 auto; padding: 0 var(--pad-x) 4rem; }
 
-/* ---------- 2. TOPO E MENU ---------- */
+/* ---------- 2. TEMAS DO VORTEX (as mesmas cores de lá) ---------- */
+:root[data-theme="ether"] {
+  --abismo: #0a0714; --abismo-rgb: 10, 7, 20; --casco: #150f27; --casco-2: #1f173a;
+  --linha: #372a5c; --linha-forte: #8b75cf; --nevoa: #f2edff; --nevoa-2: #b9addd;
+  --ambar: #c38bff; --ambar-rgb: 195, 139, 255; --ambar-claro: #dcb8ff; --ambar-tinta: #1a0733;
+  --mare: #5ef2ff; --mare-rgb: 94, 242, 255;
+  --fundo-extra: radial-gradient(900px 620px at 82% -12%, rgba(94, 242, 255, 0.13), transparent 60%),
+    radial-gradient(1000px 700px at 8% 108%, rgba(195, 139, 255, 0.18), transparent 62%);
+}
+:root[data-theme="claptrap"] {
+  --abismo: #1d1f16; --abismo-rgb: 29, 31, 22; --casco: #2a2d21; --casco-2: #353a29;
+  --linha: #4d5539; --linha-forte: #9ba277; --nevoa: #f7f0d6; --nevoa-2: #d0c7a3;
+  --ambar: #f5c518; --ambar-rgb: 245, 197, 24; --ambar-claro: #ffd84a; --ambar-tinta: #221900;
+  --mare: #43d3ee; --mare-rgb: 67, 211, 238;
+  --fundo-extra: radial-gradient(1300px 520px at 55% -14%, rgba(214, 196, 150, 0.2), transparent 62%),
+    radial-gradient(900px 500px at -5% 105%, rgba(63, 107, 42, 0.32), transparent 65%);
+}
+:root[data-theme="god"] {
+  --abismo: #0d1035; --abismo-rgb: 13, 16, 53; --casco: #1a1d4d; --casco-2: #252a66;
+  --linha: #3d4290; --linha-forte: #e9c96a; --nevoa: #fffbef; --nevoa-2: #d8d3f2;
+  --ambar: #ffd66e; --ambar-rgb: 255, 214, 110; --ambar-claro: #fff1bf; --ambar-tinta: #2b1a00;
+  --mare: #fff3d1; --mare-rgb: 255, 243, 209;
+  --fundo-extra: radial-gradient(circle at 70vw 30vh, rgba(255, 252, 236, 0.5) 0, rgba(255, 206, 120, 0.2) 12vmax, transparent 40vmax),
+    linear-gradient(180deg, #07081f 0%, #0d1035 45%, #151845 100%);
+}
+:root[data-theme="nyan"] {
+  --abismo: #0b1145; --abismo-rgb: 11, 17, 69; --casco: #131b5c; --casco-2: #1b246e;
+  --linha: #2d3a8f; --linha-forte: #8f9ce8; --nevoa: #fdf5ff; --nevoa-2: #c4c4f0;
+  --ambar: #ff8ad8; --ambar-rgb: 255, 138, 216; --ambar-claro: #ffb8e8; --ambar-tinta: #3a0029;
+  --mare: #7cf7ff; --mare-rgb: 124, 247, 255;
+  --fundo-extra: radial-gradient(2px 2px at 20% 30%, #fff, transparent), radial-gradient(2px 2px at 70% 60%, #fff, transparent),
+    radial-gradient(3px 3px at 40% 80%, #ffe6fa, transparent), radial-gradient(2px 2px at 85% 20%, #fff, transparent),
+    linear-gradient(transparent 0 calc(100% - 6px), #ff2a2a 0 calc(100% - 5px), #ff9a2a 0 calc(100% - 4px), #ffee2a 0 calc(100% - 3px), #33ff4a 0 calc(100% - 2px), #2aa8ff 0 calc(100% - 1px), #7a2aff 0);
+}
+:root[data-theme="vortice"] {
+  --abismo: #050208; --abismo-rgb: 5, 2, 8; --casco: #0e0a16; --casco-2: #17112a;
+  --linha: #2e2448; --linha-forte: #8a7bb8; --nevoa: #f4f0ff; --nevoa-2: #b3a9d1;
+  --ambar: #ff4fd8; --ambar-rgb: 255, 79, 216; --ambar-claro: #ff9ff0; --ambar-tinta: #20001a;
+  --mare: #4ff7ff; --mare-rgb: 79, 247, 255;
+  --fundo-extra: radial-gradient(circle at 50% 45%, #000 0 6vmax, rgba(255, 255, 255, 0.4) 6.4vmax, transparent 9vmax),
+    conic-gradient(from 0deg at 50% 45%, rgba(255, 79, 216, 0.25), rgba(79, 247, 255, 0.22), rgba(255, 240, 79, 0.18), rgba(120, 79, 255, 0.25), rgba(255, 79, 216, 0.25));
+  animation: vx-cores 48s steps(96) infinite;
+}
+@keyframes vx-cores { from { filter: hue-rotate(0deg); } to { filter: hue-rotate(360deg); } }
+:root[data-theme="vortice"] h1 { text-shadow: 2px 0 rgba(79, 247, 255, 0.7), -2px 0 rgba(255, 79, 216, 0.7); }
+:root[data-theme="claptrap"] h1 { text-shadow: 0 2px 0 rgba(0, 0, 0, 0.35); }
+
+/* ---------- 3. TOPO E MENU ---------- */
 .topo {
   position: sticky; top: 0; z-index: 20;
   display: flex; align-items: center; gap: 1.5rem;
   padding: 0.75rem var(--pad-x);
-  background: rgba(15, 28, 38, 0.92);
+  background: rgba(var(--abismo-rgb), 0.92);
   backdrop-filter: blur(8px);
   border-bottom: var(--borda);
 }
@@ -112,12 +166,12 @@ main { width: min(100%, var(--largura)); margin: 0 auto; padding: 0 var(--pad-x)
   border: 2px solid var(--ambar);
   font-family: var(--titulo); font-weight: 800; color: var(--ambar);
 }
-.cozinheiro__foto:empty:not([style*="url"])::before { content: "?"; }
+.cozinheiro__foto:empty:not([style*="url"])::before { content: "V"; }
 .cozinheiro__texto { display: grid; line-height: 1.2; }
 .cozinheiro__rotulo { font-size: 0.75rem; color: var(--nevoa-2); }
 .cozinheiro__nome { font-weight: 700; }
 
-/* ---------- 3. BOTÕES E CAMPOS ---------- */
+/* ---------- 4. BOTÕES E CAMPOS ---------- */
 .botao {
   display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;
   min-height: 2.75rem; padding: 0.6rem 1.2rem;
@@ -129,34 +183,36 @@ main { width: min(100%, var(--largura)); margin: 0 auto; padding: 0 var(--pad-x)
 .botao--principal { background: var(--ambar); color: var(--ambar-tinta); }
 .botao--principal:hover:not(:disabled) { background: var(--ambar-claro); color: var(--ambar-tinta); }
 .botao--linha { background: transparent; color: var(--nevoa); border-color: var(--nevoa-2); }
-.botao--linha:hover { border-color: var(--ambar); color: var(--ambar-claro); }
+.botao--linha:hover:not(:disabled) { border-color: var(--ambar); color: var(--ambar-claro); }
 .botao--texto { min-height: 0; padding: 0.2rem 0.1rem; background: none; color: var(--mare); text-decoration: underline; text-underline-offset: 3px; font-weight: 600; }
 .botao--texto:hover { color: var(--nevoa); }
 .botao--perigo { color: var(--erro); }
 .botao--pequeno { min-height: 2.25rem; padding: 0.4rem 0.9rem; font-size: 0.9rem; }
 .botao--grande { min-height: 3.5rem; padding: 0.8rem 2rem; font-size: 1.1rem; touch-action: none; user-select: none; -webkit-user-select: none; }
+.botao--icone { min-height: 2.25rem; width: 2.25rem; padding: 0; background: var(--casco); color: var(--nevoa); border-color: var(--linha); font-size: 1.1rem; }
+.botao--icone:hover:not(:disabled) { border-color: var(--ambar); }
 
 input, select, textarea {
   width: 100%; padding: 0.7rem 0.85rem;
-  border: 1px solid #6f8fa5; border-radius: var(--raio);
+  border: 1px solid var(--linha-forte); border-radius: var(--raio);
   background: var(--casco-2); color: var(--nevoa);
   font: inherit;
 }
 textarea { resize: vertical; line-height: 1.5; }
-input::placeholder, textarea::placeholder { color: #7f97a8; }
-input:focus, select:focus, textarea:focus { border-color: var(--mare); outline: none; box-shadow: 0 0 0 3px rgba(99, 214, 232, 0.25); }
+input::placeholder, textarea::placeholder { color: var(--nevoa-2); opacity: 0.75; }
+input:focus, select:focus, textarea:focus { border-color: var(--mare); outline: none; box-shadow: 0 0 0 3px rgba(var(--mare-rgb), 0.25); }
 [aria-invalid="true"] { border-color: var(--erro); }
 
 .campo { display: grid; gap: 0.35rem; }
 .campo label, .linha-form label { font-weight: 700; }
 .campo__dica { color: var(--nevoa-2); font-size: 0.9rem; }
-.campo__erro { color: var(--erro); font-size: 0.9rem; min-height: 0; }
+.campo__erro { color: var(--erro); font-size: 0.9rem; }
 .campo__erro:empty { display: none; }
 .opcional { color: var(--nevoa-2); font-weight: 400; }
 
 .mensagem { padding: 0.8rem 1rem; border-radius: var(--raio); border: 1px solid; display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; }
 .mensagem--erro { border-color: var(--erro); background: rgba(255, 155, 136, 0.1); color: var(--erro); }
-.mensagem--sucesso { border-color: var(--mare); background: rgba(99, 214, 232, 0.1); color: var(--nevoa); }
+.mensagem--sucesso { border-color: var(--mare); background: rgba(var(--mare-rgb), 0.1); color: var(--nevoa); }
 
 /* ---------- Seções (SPA): só a ativa aparece ---------- */
 .secao { display: none; padding-top: clamp(2rem, 5vw, 3.5rem); }
@@ -167,7 +223,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--mare); outline: 
 .secao__cabeca h2 { font-size: clamp(2rem, 1.4rem + 2vw, 2.75rem); margin-bottom: 0.5rem; }
 .secao__cabeca p { color: var(--nevoa-2); }
 
-/* ---------- 4. INÍCIO ---------- */
+/* ---------- 5. INÍCIO ---------- */
 .heroi {
   display: grid; grid-template-columns: 1.05fr 1fr; align-items: center;
   gap: clamp(1.5rem, 4vw, 4rem);
@@ -179,7 +235,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--mare); outline: 
   letter-spacing: -0.01em;
   line-height: 0.95;
   color: var(--ambar);
-  text-shadow: 0 0 40px rgba(240, 184, 90, 0.25);
+  text-shadow: 0 0 40px rgba(var(--ambar-rgb), 0.25);
 }
 .heroi__lede { margin-top: 1.25rem; max-width: 46ch; font-size: 1.2rem; color: var(--nevoa); }
 .heroi__acoes { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 2rem; }
@@ -193,13 +249,8 @@ input:focus, select:focus, textarea:focus { border-color: var(--mare); outline: 
 .historia h2 { font-size: 1.75rem; margin-bottom: 0.6rem; }
 .historia p { font-family: var(--titulo); font-size: 1.2rem; line-height: 1.6; color: var(--nevoa); }
 
-.pilares {
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;
-}
-.pilar {
-  padding: 1.5rem; border-radius: var(--raio-grande);
-  background: var(--casco); border: var(--borda);
-}
+.pilares { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+.pilar { padding: 1.5rem; border-radius: var(--raio-grande); background: var(--casco); border: var(--borda); }
 .pilar h3 { font-size: 1.5rem; color: var(--ambar); margin-bottom: 0.6rem; }
 .pilar ul { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.35rem; }
 .pilar li::marker { color: var(--mare); }
@@ -224,7 +275,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--mare); outline: 
 }
 .passos strong { display: block; color: var(--nevoa); font-size: 1.1rem; margin-bottom: 0.25rem; }
 
-/* ---------- 5. RECEITAS ---------- */
+/* ---------- 6. RECEITAS ---------- */
 .busca { display: flex; gap: 0.6rem; max-width: 680px; }
 .busca input { flex: 1; }
 
@@ -239,9 +290,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--mare); outline: 
 
 .aviso-lista { color: var(--nevoa-2); margin-bottom: 1rem; min-height: 1.5em; }
 
-.grade {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1.25rem;
-}
+.grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 1.25rem; }
 .grade[aria-busy="true"] { opacity: 0.5; }
 
 .cartao {
@@ -250,7 +299,13 @@ input:focus, select:focus, textarea:focus { border-color: var(--mare); outline: 
   background: var(--casco); border: var(--borda);
 }
 .cartao--casa { border-color: var(--ambar); }
-.cartao__foto { width: 100%; aspect-ratio: 1; object-fit: cover; background: var(--casco-2); }
+.cartao__arte, .receita__arte {
+  display: grid; place-items: center; aspect-ratio: 1;
+  background:
+    radial-gradient(circle at 50% 60%, rgba(var(--ambar-rgb), 0.18), transparent 62%),
+    repeating-conic-gradient(var(--casco-2) 0 25%, var(--casco) 0 50%) 0 0 / 24px 24px;
+}
+.cartao__arte .pixel { width: 70%; height: auto; }
 .cartao__corpo { display: flex; flex-direction: column; gap: 0.3rem; flex: 1; padding: 1rem; }
 .cartao__nome { font-size: 1.25rem; }
 .cartao__resumo { color: var(--nevoa-2); font-size: 0.9rem; }
@@ -258,29 +313,59 @@ input:focus, select:focus, textarea:focus { border-color: var(--mare); outline: 
 .cartao .botao { margin-top: auto; align-self: flex-start; }
 .selo { align-self: flex-start; padding: 0.1rem 0.6rem; border-radius: 999px; background: var(--ambar); color: var(--ambar-tinta); font-size: 0.8rem; font-weight: 700; }
 
-/* ---------- 6. CADASTRO ---------- */
+/* ---------- 7. CADASTRO ---------- */
 .cadastro { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 2rem; align-items: start; }
-.formulario { display: grid; gap: 1.1rem; padding: clamp(1.25rem, 3vw, 2rem); border-radius: var(--raio-grande); background: var(--casco); border: var(--borda); }
+.formulario { display: grid; gap: 1.25rem; padding: clamp(1.25rem, 3vw, 2rem); border-radius: var(--raio-grande); background: var(--casco); border: var(--borda); }
 .campo-dupla { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 .formulario__acoes { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+
+.artes { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 0.5rem; margin-top: 0.35rem; }
+.arte {
+  position: relative; display: grid; justify-items: center; gap: 0.25rem; padding: 0.5rem 0.25rem;
+  border: 2px solid var(--linha); border-radius: var(--raio); background: var(--casco-2);
+  font-size: 0.8rem; color: var(--nevoa-2); cursor: pointer; text-align: center;
+}
+.arte input { position: absolute; top: 0; left: 0; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.arte:has(input:checked) { border-color: var(--ambar); color: var(--nevoa); background: rgba(var(--ambar-rgb), 0.12); }
+.arte:has(input:focus-visible) { outline: 3px solid var(--mare); outline-offset: 2px; }
+
+.aula { padding: 1rem; border: 1px dashed var(--linha-forte); border-radius: var(--raio-grande); }
+.aula legend { padding: 0 0.4rem; }
+.aula__passos { list-style: none; margin: 0.5rem 0 0; padding: 0; display: grid; gap: 0.6rem; counter-reset: aula; }
+.passo {
+  counter-increment: aula; display: flex; gap: 0.6rem; align-items: flex-start;
+  padding: 0.6rem 0.6rem 0.6rem 2.6rem; position: relative;
+  border-radius: var(--raio); background: var(--casco-2);
+}
+.passo::before {
+  content: counter(aula); position: absolute; left: 0.75rem; top: 0.6rem;
+  font-family: var(--titulo); font-size: 1.5rem; font-weight: 800; color: var(--mare); line-height: 1.6;
+}
+.passo__campos { flex: 1; min-width: 0; display: grid; grid-template-columns: minmax(0, 9rem) minmax(0, 1fr); gap: 0.4rem; }
+.passo__campos input, .passo__campos select { padding: 0.5rem 0.65rem; background: var(--casco); }
+.passo__detalhe { grid-column: 1 / -1; }
+.passo__botoes { display: flex; gap: 0.25rem; }
+.aula__acoes { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem; margin-top: 0.75rem; }
 
 .cadastro__lado { padding: 1.25rem; border-radius: var(--raio-grande); border: 1px dashed var(--linha); }
 .cadastro__lado h3 { font-size: 1.4rem; margin-bottom: 0.4rem; }
 .cadastro__lado > p { color: var(--nevoa-2); }
 .lista-casa { list-style: none; margin: 1rem 0 0; padding: 0; display: grid; gap: 0.5rem; }
 .lista-casa li { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; padding-bottom: 0.5rem; border-bottom: var(--borda); }
-.lista-casa li > .botao:first-child { text-align: left; color: var(--nevoa); }
+.lista-casa li > .botao:nth-child(2) { text-align: left; color: var(--nevoa); }
 .lista-casa__cat { color: var(--nevoa-2); font-size: 0.85rem; margin-right: auto; }
 
-/* ---------- 7. DIÁLOGOS ---------- */
+/* ---------- 8. DIÁLOGOS E CONTA ---------- */
 .dialogo {
-  width: min(100% - 2rem, 920px); max-height: calc(100vh - 2rem);
+  width: min(100% - 2rem, 940px); max-height: calc(100vh - 2rem);
   padding: 0; border: var(--borda); border-radius: var(--raio-grande);
   background: var(--casco); color: var(--nevoa);
 }
 .dialogo::backdrop { background: rgba(5, 10, 15, 0.75); }
-.dialogo--personagem { width: min(100% - 2rem, 640px); }
+.dialogo--conta { width: min(100% - 2rem, 680px); }
 .dialogo__corpo { padding: clamp(1.25rem, 3vw, 2rem); display: grid; gap: 1rem; }
+.dialogo__corpo > div[id] { display: grid; gap: 1rem; }
+.dialogo__corpo > div[hidden] { display: none; }
 .dialogo__topo { display: flex; align-items: start; justify-content: space-between; gap: 1rem; }
 .dialogo__topo h2 { font-size: clamp(1.6rem, 1.2rem + 1.5vw, 2.25rem); }
 .dialogo__texto { color: var(--nevoa-2); }
@@ -290,36 +375,57 @@ input:focus, select:focus, textarea:focus { border-color: var(--mare); outline: 
   font-size: 1.5rem; line-height: 1; cursor: pointer;
 }
 .fechar:hover { border-color: var(--ambar); }
-.carregando { color: var(--nevoa-2); }
 
 .receita { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 2rem; }
-.receita__foto { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: var(--raio-grande); }
+.receita__arte { border-radius: var(--raio-grande); }
+.receita__arte .pixel { width: 75%; height: auto; }
 .receita__fatos { display: grid; grid-template-columns: auto 1fr; gap: 0.3rem 1rem; margin: 1rem 0; }
 .receita__fatos dt { color: var(--nevoa-2); }
 .receita__fatos dd { margin: 0; font-weight: 600; }
 .receita__acao { display: grid; gap: 0.5rem; }
+.receita__idioma { margin-bottom: 1rem; }
 .receita__texto h3 { font-size: 1.4rem; margin: 0 0 0.6rem; color: var(--ambar); }
-.receita__texto h3 + .campo__dica { margin-top: -0.4rem; margin-bottom: 0.6rem; }
 .receita__ingredientes { list-style: none; margin: 0 0 1.5rem; padding: 0; columns: 2 14rem; column-gap: 1.5rem; }
 .receita__ingredientes li { display: flex; justify-content: space-between; gap: 0.75rem; padding: 0.3rem 0; border-bottom: 1px dotted var(--linha); break-inside: avoid; }
 .medida { color: var(--nevoa-2); text-align: right; }
-.receita__preparo { display: grid; gap: 0.75rem; max-width: 68ch; font-family: var(--titulo); font-size: 1.1rem; line-height: 1.65; }
+.receita__preparo { display: grid; gap: 0.75rem; max-width: 68ch; margin-bottom: 1.5rem; font-family: var(--titulo); font-size: 1.1rem; line-height: 1.65; }
+.receita__aula { margin: 0; padding-left: 1.4rem; display: grid; gap: 0.4rem; color: var(--nevoa-2); }
+.receita__aula strong { color: var(--mare); }
+.receita__aula li::marker { color: var(--mare); font-weight: 700; }
 .receita__links { display: flex; gap: 1.25rem; margin-top: 1rem; }
 
 .linha-form { display: grid; gap: 0.4rem; }
 .linha-form__campos { display: flex; gap: 0.5rem; }
 .linha-form__campos input { flex: 1; }
 
+.conta__cabeca { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0.5rem 1rem; padding-bottom: 0.75rem; border-bottom: var(--borda); }
+.conta__rotulo, .conta__codigo { color: var(--nevoa-2); }
+.conta__cabeca strong { font-family: var(--titulo); font-size: 1.4rem; }
+.conta__titulo { font-size: 1.35rem; margin-top: 0.5rem; }
+
 .fichas { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6rem; }
-.ficha {
-  display: flex; align-items: center; gap: 0.85rem;
-  padding: 0.75rem; border-radius: var(--raio); border: var(--borda); background: var(--casco-2);
-}
+.ficha { display: flex; align-items: center; gap: 0.85rem; padding: 0.75rem; border-radius: var(--raio); border: var(--borda); background: var(--casco-2); }
 .ficha.is-atual { border-color: var(--ambar); }
 .ficha__foto { width: 3rem; height: 3rem; font-size: 1.25rem; }
 .ficha__texto { flex: 1; min-width: 0; }
 .ficha__nome { font-weight: 700; }
 .ficha__info, .ficha__teste { font-size: 0.85rem; color: var(--nevoa-2); }
+.vazio { color: var(--nevoa-2); }
+
+.temas { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 0.5rem; }
+.tema {
+  display: grid; grid-template-columns: auto 1fr; gap: 0 0.6rem; justify-content: stretch; text-align: left;
+  padding: 0.6rem; border: 2px solid var(--linha); background: var(--casco-2); color: var(--nevoa); font-weight: 600;
+}
+.tema.is-ativo { border-color: var(--ambar); }
+.tema__amostra { grid-row: span 2; width: 2rem; height: 2rem; border-radius: 50%; align-self: center; background: conic-gradient(var(--ambar) 0 50%, var(--mare) 0); }
+.tema[data-tema=""] .tema__amostra { background: conic-gradient(#f0b85a 0 50%, #63d6e8 0); }
+.tema[data-tema="ether"] .tema__amostra { background: conic-gradient(#c38bff 0 50%, #5ef2ff 0); }
+.tema[data-tema="claptrap"] .tema__amostra { background: conic-gradient(#f5c518 0 50%, #43d3ee 0); }
+.tema[data-tema="god"] .tema__amostra { background: conic-gradient(#ffd66e 0 50%, #fff3d1 0); }
+.tema[data-tema="nyan"] .tema__amostra { background: conic-gradient(#ff8ad8 0 50%, #7cf7ff 0); }
+.tema[data-tema="vortice"] .tema__amostra { background: conic-gradient(#ff4fd8, #4ff7ff, #fff04f, #784fff, #ff4fd8); }
+.tema__texto { font-size: 0.8rem; font-weight: 400; color: var(--nevoa-2); }
 
 .torrada {
   position: fixed; left: 50%; bottom: 1.5rem; z-index: 100;
@@ -330,49 +436,63 @@ input:focus, select:focus, textarea:focus { border-color: var(--mare); outline: 
 }
 .torrada.is-visivel { transform: translate(-50%, 0); visibility: visible; transition: transform 0.25s ease-out; }
 
-/* ---------- 8. COZINHA E JOGOS ---------- */
-.etapas { display: flex; gap: 0.5rem; margin: 0; padding: 0; list-style: none; counter-reset: etapa; }
+/* ---------- 9. COZINHA E JOGOS ---------- */
+.etapas { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0; padding: 0; list-style: none; counter-reset: etapa; }
 .etapas li {
-  counter-increment: etapa; flex: 1;
-  padding: 0.5rem 0.6rem; border-radius: var(--raio);
-  background: var(--casco-2); color: var(--nevoa-2); font-size: 0.9rem; font-weight: 600;
+  counter-increment: etapa; flex: 1 1 6rem;
+  padding: 0.45rem 0.6rem; border-radius: var(--raio);
+  background: var(--casco-2); color: var(--nevoa-2); font-size: 0.85rem; font-weight: 600;
 }
 .etapas li::before { content: counter(etapa) ". "; }
 .etapas li.is-atual { background: var(--ambar); color: var(--ambar-tinta); }
 .etapas li.is-feita { color: var(--mare); }
 .etapas li.is-feita::before { content: "✓ "; }
 
-.cozinha__area { min-height: 340px; }
+.cozinha__area { min-height: 360px; }
 .jogo { display: grid; gap: 1rem; }
 .jogo__titulo { font-size: 1.75rem; }
-.jogo__instrucao { max-width: 62ch; color: var(--nevoa); }
+.jogo__passo { font-family: var(--titulo); font-size: 1.2rem; padding-left: 0.9rem; border-left: 3px solid var(--ambar); }
+.jogo__instrucao { max-width: 62ch; color: var(--nevoa-2); }
 .jogo__acoes { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+.jogo__acoes--par .botao { flex: 1; }
 .jogo__placar { color: var(--nevoa-2); font-weight: 600; }
 .jogo__retorno { min-height: 1.5em; font-weight: 700; color: var(--ambar-claro); }
-.jogo__fim:focus { outline: none; }
 .jogo__fim { display: grid; gap: 0.6rem; justify-items: start; padding-top: 1rem; border-top: var(--borda); }
+.jogo__fim:focus { outline: none; }
 .jogo__nota strong { font-family: var(--titulo); font-size: 2.25rem; color: var(--ambar); }
 .jogo__comentario { color: var(--nevoa-2); }
 
 .relogio { height: 6px; border-radius: 3px; background: var(--casco-2); overflow: hidden; }
 .relogio__barra { height: 100%; width: 100%; background: var(--mare); }
 
+/* Separar e Montar */
 .despensa { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0.5rem; }
 .despensa__item {
   justify-content: flex-start; text-align: left;
-  background: var(--casco-2); color: var(--nevoa); border: var(--borda);
-  font-weight: 600;
+  background: var(--casco-2); color: var(--nevoa); border: var(--borda); font-weight: 600;
 }
 .despensa__item:hover:not(:disabled) { border-color: var(--nevoa-2); }
-.despensa__item[aria-pressed="true"] { border-color: var(--ambar); background: rgba(240, 184, 90, 0.18); }
+.despensa__item[aria-pressed="true"] { border-color: var(--ambar); background: rgba(var(--ambar-rgb), 0.18); }
 .despensa__item:disabled { opacity: 1; cursor: default; }
-.despensa__item.is-certo { border-color: var(--mare); background: rgba(99, 214, 232, 0.18); }
+.despensa__item.is-certo { border-color: var(--mare); background: rgba(var(--mare-rgb), 0.18); }
 .despensa__item.is-certo::before { content: "✓"; color: var(--mare); }
-.despensa__item.is-errado { border-color: var(--erro); background: rgba(255, 155, 136, 0.15); }
+.despensa__item.is-errado { border-color: var(--erro); background: rgba(255, 155, 136, 0.15); animation: tremer 0.3s; }
 .despensa__item.is-errado::before { content: "✕"; color: var(--erro); }
 .despensa__item.is-faltou { border-style: dashed; border-color: var(--mare); color: var(--nevoa-2); }
 .despensa__item.is-faltou::before { content: "faltou:"; color: var(--mare); font-weight: 400; }
+.despensa__item.is-usado { opacity: 0.35; }
+@keyframes tremer { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
 
+.montagem { display: grid; grid-template-columns: minmax(0, 14rem) minmax(0, 1fr); gap: 1rem; align-items: end; }
+.pilha {
+  display: flex; flex-direction: column-reverse; gap: 3px; min-height: 12rem; margin: 0; padding: 0.5rem;
+  list-style: none; border-bottom: 6px solid var(--nevoa-2); border-radius: 0 0 var(--raio) var(--raio); background: var(--casco-2);
+}
+.pilha__camada { padding: 0.3rem 0.6rem; border-radius: 6px; background: var(--ambar); color: var(--ambar-tinta); font-weight: 700; font-size: 0.85rem; text-align: center; animation: cair 0.25s ease-out; }
+.pilha__camada:nth-child(even) { background: var(--mare); color: var(--abismo); }
+@keyframes cair { from { transform: translateY(-14px); opacity: 0; } }
+
+/* Cortar */
 .tabua {
   position: relative; height: 72px; border-radius: var(--raio);
   background: repeating-linear-gradient(90deg, #6b4a2b 0 18px, #74512f 18px 36px);
@@ -388,22 +508,70 @@ input:focus, select:focus, textarea:focus { border-color: var(--mare); outline: 
 @keyframes piscar-ok { 50% { border-color: var(--mare); } }
 @keyframes piscar-erro { 50% { border-color: var(--erro); } }
 
+/* Misturar */
+.tigela {
+  position: relative; height: 120px; max-width: 360px; width: 100%; justify-self: center;
+  border-radius: 0 0 180px 180px; border: 4px solid var(--nevoa-2); border-top-width: 8px;
+  background: #e8c27a; overflow: hidden;
+}
+.tigela__grumos {
+  position: absolute; inset: 0;
+  background: radial-gradient(circle at 20% 30%, #b98b3e 0 7px, transparent 8px), radial-gradient(circle at 55% 55%, #b98b3e 0 9px, transparent 10px),
+    radial-gradient(circle at 78% 28%, #b98b3e 0 6px, transparent 7px), radial-gradient(circle at 38% 75%, #b98b3e 0 8px, transparent 9px);
+  transition: opacity 0.2s;
+}
+.tigela__colher {
+  position: absolute; top: -10px; left: 50%; width: 14px; height: 110px; margin-left: -7px;
+  border-radius: 7px; background: var(--nevoa); transform-origin: 50% 0; transition: transform 0.12s ease-out;
+}
+.tigela__colher[data-lado="esq"] { transform: rotate(28deg); }
+.tigela__colher[data-lado="dir"] { transform: rotate(-28deg); }
+.medidor { height: 14px; border-radius: 7px; background: var(--casco-2); overflow: hidden; }
+.medidor__nivel { height: 100%; width: 0; background: var(--mare); transition: width 0.12s; }
+
+/* Medir */
+.copo {
+  position: relative; width: 140px; height: 220px; justify-self: center;
+  border: 4px solid var(--nevoa-2); border-top: none; border-radius: 0 0 18px 18px;
+  background: rgba(var(--mare-rgb), 0.06); overflow: hidden;
+}
+.copo__nivel { position: absolute; left: 0; right: 0; bottom: 0; height: 0; background: linear-gradient(var(--mare), rgba(var(--mare-rgb), 0.6)); }
+.copo__linha { position: absolute; left: -4px; right: -4px; height: 0; border-top: 3px dashed var(--ambar); }
+.copo__linha::after { content: "linha"; position: absolute; right: 6px; top: -1.4rem; font-size: 0.75rem; font-weight: 700; color: var(--ambar); }
+
+/* Fogo */
 .termometro {
   position: relative; height: 56px; border-radius: 28px; overflow: hidden;
   background: linear-gradient(90deg, #1d3345 0%, #2b4457 55%, #6b3b2a 90%, #8a2f1f 100%);
   border: 2px solid var(--linha);
 }
-.termometro__zona { position: absolute; top: 0; bottom: 0; background: rgba(99, 214, 232, 0.28); border-left: 2px dashed var(--mare); border-right: 2px dashed var(--mare); }
-.termometro__nivel { position: absolute; left: 0; top: 0; bottom: 0; width: 15%; background: linear-gradient(90deg, rgba(240, 184, 90, 0.2), var(--ambar)); border-right: 4px solid var(--ambar-claro); }
+.termometro__zona { position: absolute; top: 0; bottom: 0; background: rgba(var(--mare-rgb), 0.28); border-left: 2px dashed var(--mare); border-right: 2px dashed var(--mare); }
+.termometro__nivel { position: absolute; left: 0; top: 0; bottom: 0; width: 15%; background: linear-gradient(90deg, rgba(var(--ambar-rgb), 0.2), var(--ambar)); border-right: 4px solid var(--ambar-claro); }
 .termometro[data-estado="ponto"] { border-color: var(--mare); }
 .termometro[data-estado="queima"] { border-color: var(--erro); }
 .termometro[data-estado="queima"] .termometro__nivel { border-right-color: var(--erro); }
-.botao.is-segurando { background: var(--ambar-claro); box-shadow: 0 0 0 4px rgba(240, 184, 90, 0.35); }
+.botao.is-segurando { background: var(--ambar-claro); box-shadow: 0 0 0 4px rgba(var(--ambar-rgb), 0.35); }
 
-.notas { list-style: none; margin: 0; padding: 0; display: flex; gap: 0.75rem; flex-wrap: wrap; }
-.notas li { display: grid; padding: 0.6rem 1rem; border-radius: var(--raio); background: var(--casco-2); min-width: 7rem; }
+/* Forno */
+.forno { display: grid; gap: 0.75rem; justify-items: center; }
+.forno__janela {
+  display: grid; place-items: center; width: 200px; height: 170px;
+  border-radius: 14px; border: 10px solid #3a3f45; background: radial-gradient(circle, #ff9a3c33, #2a1608 75%);
+  box-shadow: inset 0 0 30px rgba(255, 140, 40, 0.5);
+}
+.forno__janela .pixel { width: 128px; height: 128px; }
+.forno__escala {
+  position: relative; width: min(100%, 420px); height: 22px; border-radius: 11px;
+  background: linear-gradient(90deg, #f3e2b0, #e2b062 50%, #c07a2c 70%, #6b3a17 85%, #1f120a);
+}
+.forno__faixa { position: absolute; top: -4px; bottom: -4px; border: 2px dashed var(--nevoa); border-radius: 6px; }
+.forno__ponteiro { position: absolute; top: -8px; bottom: -8px; width: 4px; margin-left: -2px; background: var(--nevoa); border-radius: 2px; }
+
+/* Resultado */
+.notas { list-style: none; margin: 0; padding: 0; display: flex; gap: 0.6rem; flex-wrap: wrap; }
+.notas li { display: grid; padding: 0.5rem 0.9rem; border-radius: var(--raio); background: var(--casco-2); min-width: 6.5rem; }
 .notas span { color: var(--nevoa-2); font-size: 0.85rem; }
-.notas strong { font-family: var(--titulo); font-size: 1.75rem; color: var(--ambar); }
+.notas strong { font-family: var(--titulo); font-size: 1.6rem; color: var(--ambar); }
 
 .rolagem { display: grid; gap: 0.4rem; justify-items: start; }
 .rolagem__dados { display: flex; gap: 0.6rem; }
@@ -420,24 +588,26 @@ input:focus, select:focus, textarea:focus { border-color: var(--mare); outline: 
 .rolagem__total strong { font-family: var(--titulo); font-size: 2.5rem; color: var(--ambar); margin-right: 0.3rem; }
 
 .prato {
-  padding: 1.1rem 1.25rem; border-radius: var(--raio-grande);
+  display: flex; align-items: center; gap: 1rem;
+  padding: 1rem 1.25rem; border-radius: var(--raio-grande);
   background: var(--casco-2); border: 2px solid var(--nevoa-2);
 }
+.prato .pixel { flex: none; width: 96px; height: 96px; }
 .prato--incomum { border-color: #8fd694; }
-.prato--rara { border-color: var(--mare); }
+.prato--rara { border-color: #63d6e8; }
 .prato--epica { border-color: #c29bff; }
-.prato--lendaria { border-color: var(--ambar); box-shadow: 0 0 24px rgba(240, 184, 90, 0.35); }
+.prato--lendaria { border-color: #f0b85a; box-shadow: 0 0 24px rgba(240, 184, 90, 0.35); }
 .prato__raridade { font-weight: 700; color: var(--nevoa-2); }
 .prato--incomum .prato__raridade { color: #8fd694; }
-.prato--rara .prato__raridade { color: var(--mare); }
+.prato--rara .prato__raridade { color: #63d6e8; }
 .prato--epica .prato__raridade { color: #c29bff; }
-.prato--lendaria .prato__raridade { color: var(--ambar); }
+.prato--lendaria .prato__raridade { color: #f0b85a; }
 .prato__nome { font-family: var(--titulo); font-size: 1.5rem; font-weight: 700; }
 .prato__info { color: var(--nevoa-2); font-size: 0.9rem; }
 
 .rodape { padding: 2rem var(--pad-x); border-top: var(--borda); color: var(--nevoa-2); font-size: 0.9rem; text-align: center; }
 
-/* ---------- 9. CELULAR ---------- */
+/* ---------- 10. CELULAR ---------- */
 @media (max-width: 900px) {
   .heroi { grid-template-columns: 1fr; min-height: 0; }
   .heroi__arte { max-width: 420px; justify-self: center; order: -1; }
@@ -459,11 +629,9 @@ input:focus, select:focus, textarea:focus { border-color: var(--mare); outline: 
   .cozinheiro__nome { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.9rem; }
   .menu { order: 3; width: 100%; margin: 0; justify-content: space-between; }
   .menu a { flex: 1; text-align: center; padding-inline: 0.5rem; }
-  .campo-dupla { grid-template-columns: 1fr; }
+  .campo-dupla, .passo__campos, .montagem { grid-template-columns: 1fr; }
+  .passo { flex-direction: column; }
   .busca, .linha-form__campos { flex-direction: column; }
-  .etapas li { font-size: 0; padding: 0.4rem; text-align: center; }
-  .etapas li::before { font-size: 0.9rem; }
-  .etapas li.is-atual { font-size: 0.85rem; }
   .ficha { flex-wrap: wrap; }
   .ficha .botao { width: 100%; }
   .dialogo { width: 100%; max-width: none; max-height: 100%; height: 100%; border-radius: 0; margin: 0; }
@@ -471,4 +639,5 @@ input:focus, select:focus, textarea:focus { border-color: var(--mare); outline: 
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  :root[data-theme="vortice"] { animation: none; }
 }

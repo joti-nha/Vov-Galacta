@@ -4,7 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Cozinha da Vó Galacta</title>
-  <meta name="description" content="Receitas de toda a galáxia: aprenda cozinhando em três desafios e mande o prato pronto para o inventário do seu personagem do Vortex.">
+  <meta name="description" content="Receitas de toda a galáxia: aprenda cozinhando, passo a passo, e mande o prato pronto para o inventário do seu personagem do Vortex.">
+  <!-- o tema do Vortex entra antes de desenhar a página (o mesmo que o Vortex faz) -->
+  <script>try { var vt = JSON.parse(localStorage.getItem('vortex.themes.v1')) || {}; if (vt.active && (vt.unlocked || []).indexOf(vt.active) >= 0) document.documentElement.setAttribute('data-theme', vt.active); } catch (e) {}</script>
   <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -26,11 +28,11 @@
       <a href="#cadastro" data-secao="cadastro">Nova receita</a>
     </nav>
 
-    <button class="cozinheiro" type="button" id="abrir-personagem">
+    <button class="cozinheiro" type="button" id="abrir-conta">
       <span class="cozinheiro__foto" id="cozinheiro-foto" aria-hidden="true"></span>
       <span class="cozinheiro__texto">
-        <span class="cozinheiro__rotulo" id="cozinheiro-rotulo">Quem vai cozinhar?</span>
-        <span class="cozinheiro__nome" id="cozinheiro-nome">Escolher personagem</span>
+        <span class="cozinheiro__rotulo" id="cozinheiro-rotulo">Conta do Vortex</span>
+        <span class="cozinheiro__nome" id="cozinheiro-nome">Entrar</span>
       </span>
     </button>
   </header>
@@ -41,7 +43,7 @@
       <div class="heroi">
         <div class="heroi__texto">
           <h1 id="inicio-titulo">Cozinha da Vó Galacta</h1>
-          <p class="heroi__lede">Receitas de toda a galáxia, ensinadas na prática. Escolha um prato, aprenda cozinhando em três desafios e mande o resultado para o inventário do seu personagem do Vortex.</p>
+          <p class="heroi__lede">Receitas de toda a galáxia, ensinadas na prática. Escolha um prato, cozinhe cada passo da receita num minigame e mande o resultado para o inventário do seu personagem do Vortex.</p>
           <div class="heroi__acoes">
             <a class="botao botao--principal" href="#receitas" data-secao="receitas">Ver receitas</a>
             <a class="botao botao--linha" href="#cadastro" data-secao="cadastro">Cadastrar uma receita</a>
@@ -80,9 +82,9 @@
       <div class="passos">
         <h2>Como funciona uma aula</h2>
         <ol>
-          <li><strong>Escolha a receita.</strong> Abra qualquer prato do caderno e veja ingredientes e modo de preparo.</li>
-          <li><strong>Cozinhe com a Vó.</strong> Separe os ingredientes, corte no ritmo e segure o fogo no ponto.</li>
-          <li><strong>Leve o prato.</strong> O teste de culinária do seu personagem define a qualidade, e o prato vai direto para o inventário dele no Vortex.</li>
+          <li><strong>Entre com sua conta do Vortex.</strong> Use o código do seu perfil e escolha qual personagem vai para a cozinha.</li>
+          <li><strong>Cozinhe passo a passo.</strong> Cada passo da receita vira um minigame da ação: separar, cortar, misturar, medir, fogo, forno ou montar.</li>
+          <li><strong>Leve o prato.</strong> O teste de culinária do personagem define a qualidade, e o prato vai direto para o inventário dele.</li>
         </ol>
       </div>
     </section>
@@ -91,12 +93,12 @@
     <section class="secao" id="receitas" aria-labelledby="receitas-titulo">
       <div class="secao__cabeca">
         <h2 id="receitas-titulo">Caderno de receitas</h2>
-        <p>Pratos da TheMealDB, uma base pública de receitas do mundo todo (o texto das receitas vem em inglês), e os que a tripulação cadastrou aqui.</p>
+        <p>Os pratos da Vó vêm da TheMealDB, uma base pública de receitas do mundo todo, traduzidos aqui. Os da tripulação foram cadastrados neste caderno.</p>
       </div>
 
       <form class="busca" id="form-busca" role="search">
         <label class="visualmente-oculto" for="campo-busca">Buscar receita</label>
-        <input id="campo-busca" type="search" placeholder="Buscar pelo nome do prato (ex.: chicken, cake, soup)" autocomplete="off">
+        <input id="campo-busca" type="search" placeholder="Buscar pelo nome ou ingrediente" autocomplete="off">
         <button class="botao botao--principal" type="submit">Buscar</button>
       </form>
 
@@ -110,7 +112,7 @@
     <section class="secao" id="cadastro" aria-labelledby="cadastro-titulo">
       <div class="secao__cabeca">
         <h2 id="cadastro-titulo">Nova receita para o caderno</h2>
-        <p>Ela entra no caderno na hora, fica salva neste navegador e pode ser cozinhada como qualquer outra.</p>
+        <p>Escreva a receita e monte a aula: a ordem dos passos e o minigame de cada um. Ela entra no caderno na hora e fica salva neste navegador.</p>
       </div>
 
       <div class="cadastro">
@@ -133,11 +135,10 @@
             </div>
           </div>
 
-          <div class="campo">
-            <label for="r-imagem">Link da foto <span class="opcional">(opcional)</span></label>
-            <input id="r-imagem" name="imagem" type="url" placeholder="https://..." aria-describedby="erro-imagem">
-            <p class="campo__erro" id="erro-imagem"></p>
-          </div>
+          <fieldset class="campo">
+            <legend>Aparência do prato</legend>
+            <div class="artes" id="r-artes"></div>
+          </fieldset>
 
           <div class="campo">
             <label for="r-ingredientes">Ingredientes</label>
@@ -148,9 +149,21 @@
 
           <div class="campo">
             <label for="r-preparo">Modo de preparo</label>
-            <textarea id="r-preparo" name="preparo" rows="7" aria-describedby="erro-preparo"></textarea>
+            <p class="campo__dica" id="dica-preparo">Um passo por linha, na ordem em que acontecem.</p>
+            <textarea id="r-preparo" name="preparo" rows="7" aria-describedby="dica-preparo erro-preparo"></textarea>
             <p class="campo__erro" id="erro-preparo"></p>
           </div>
+
+          <fieldset class="campo aula">
+            <legend>Aula: os minigames, na ordem</legend>
+            <p class="campo__dica" id="dica-aula">De 2 a 8 passos. Cada passo é uma ação da receita e o jogo que ensina essa ação.</p>
+            <ol class="aula__passos" id="r-passos" aria-describedby="dica-aula erro-passos"></ol>
+            <p class="campo__erro" id="erro-passos"></p>
+            <div class="aula__acoes">
+              <button class="botao botao--linha botao--pequeno" type="button" id="r-mais-passo">Adicionar passo</button>
+              <button class="botao botao--texto" type="button" id="r-sugerir">Sugerir pelo modo de preparo</button>
+            </div>
+          </fieldset>
 
           <div class="mensagem" id="mensagem-cadastro" role="status" hidden></div>
 
@@ -170,7 +183,7 @@
   </main>
 
   <footer class="rodape">
-    <p>Projeto de Sistemas Web II. Receitas da <a href="https://www.themealdb.com/" target="_blank" rel="noopener">TheMealDB</a>; personagens e inventário do <a href="https://joti-nha.github.io/Vortex_aplication/" target="_blank" rel="noopener">Vortex</a>.</p>
+    <p>Projeto de Sistemas Web II. Receitas da <a href="https://www.themealdb.com/" target="_blank" rel="noopener">TheMealDB</a>; conta, personagens, inventário e temas do <a href="https://joti-nha.github.io/Vortex_aplication/" target="_blank" rel="noopener">Vortex</a>.</p>
   </footer>
 
   <!-- ================= DIÁLOGOS ================= -->
@@ -182,42 +195,52 @@
     <div class="dialogo__corpo" id="cozinha-corpo"></div>
   </dialog>
 
-  <dialog class="dialogo dialogo--personagem" id="dialogo-personagem" aria-labelledby="personagem-titulo">
+  <dialog class="dialogo dialogo--conta" id="dialogo-conta" aria-labelledby="conta-titulo">
     <div class="dialogo__corpo">
       <div class="dialogo__topo">
-        <h2 id="personagem-titulo">Quem vai cozinhar?</h2>
+        <h2 id="conta-titulo">Conta do Vortex</h2>
         <button class="fechar" type="button" data-fechar aria-label="Fechar">×</button>
       </div>
-      <p class="dialogo__texto">Escolha uma ficha do Vortex. A Precisão e o Ofício (se for de culinária) entram no teste, e o prato pronto vai para o inventário dela.</p>
 
-      <form class="linha-form" id="form-perfil">
-        <label for="campo-perfil">Código do seu perfil no Vortex</label>
-        <div class="linha-form__campos">
-          <input id="campo-perfil" inputmode="numeric" maxlength="6" placeholder="De 1 a 6 números">
-          <button class="botao botao--principal" type="submit">Ver meus personagens</button>
+      <div id="conta-fora">
+        <p class="dialogo__texto">Entre com o código do seu perfil do Vortex. É o mesmo login de lá: entrar aqui também entra no Vortex neste navegador, e os temas que você liberou lá aparecem aqui.</p>
+        <form class="linha-form" id="form-conta">
+          <label for="campo-conta">Código do perfil</label>
+          <div class="linha-form__campos">
+            <input id="campo-conta" inputmode="numeric" maxlength="6" placeholder="De 1 a 6 números" autocomplete="off">
+            <button class="botao botao--principal" type="submit">Entrar</button>
+          </div>
+        </form>
+        <p class="campo__dica">Ainda não tem perfil? Crie um no <a href="https://joti-nha.github.io/Vortex_aplication/" target="_blank" rel="noopener">Vortex</a> e volte aqui.</p>
+      </div>
+
+      <div id="conta-dentro" hidden>
+        <div class="conta__cabeca">
+          <p><span class="conta__rotulo">Perfil</span> <strong id="conta-nome"></strong> <span class="conta__codigo" id="conta-codigo"></span></p>
+          <button class="botao botao--texto" type="button" id="sair-conta">Sair da conta</button>
         </div>
-      </form>
 
-      <form class="linha-form" id="form-nome">
-        <label for="campo-nome">Ou busque a ficha pelo nome</label>
-        <div class="linha-form__campos">
-          <input id="campo-nome" type="search" placeholder="Nome do personagem">
-          <button class="botao botao--linha" type="submit">Buscar</button>
-        </div>
-      </form>
+        <h3 class="conta__titulo">Quem vai cozinhar?</h3>
+        <p class="dialogo__texto">A Precisão e o Ofício (se for de culinária) entram no teste, e o prato pronto vai para o inventário da ficha escolhida.</p>
+        <ul class="fichas" id="lista-fichas"></ul>
 
-      <p class="aviso-lista" id="aviso-personagem" role="status"></p>
-      <ul class="fichas" id="lista-fichas"></ul>
+        <h3 class="conta__titulo">Tema</h3>
+        <p class="dialogo__texto" id="dica-temas">Os mesmos temas do Vortex. Trocar aqui troca lá também.</p>
+        <div class="temas" id="lista-temas" role="radiogroup" aria-labelledby="dica-temas"></div>
+      </div>
 
-      <button class="botao botao--texto" type="button" id="sair-personagem" hidden>Cozinhar sem personagem</button>
+      <p class="aviso-lista" id="aviso-conta" role="status"></p>
     </div>
   </dialog>
 
   <div class="torrada" id="torrada" role="status" aria-live="polite"></div>
 
   <script src="js/util.js"></script>
+  <script src="js/pixel-arte.js"></script>
+  <script src="js/cardapio.js"></script>
   <script src="js/receitas-api.js"></script>
   <script src="js/vortex-api.js"></script>
+  <script src="js/conta.js"></script>
   <script src="js/minigames.js"></script>
   <script src="js/app.js"></script>
 </body>

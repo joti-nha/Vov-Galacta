@@ -3,7 +3,7 @@
    O Vortex (https://github.com/joti-nha/Vortex_aplication) guarda as fichas
    em characters/{id}; o inventário fica em sheet.inventory. Aqui o site:
      1. entra como visitante anônimo (como o próprio Vortex faz);
-     2. acha fichas pelo código do perfil ou pelo nome;
+     2. abre o perfil (a conta) pelo código e lista as fichas dele;
      3. grava o prato pronto no inventário, no mesmo formato de um
         "Item geral" consumível do Vortex.
    ===================================================================== */
@@ -162,44 +162,29 @@ function resumoDaFicha(doc) {
   };
 }
 
-async function fichasDoPerfil(codigo) {
+// a "conta" é o perfil do Vortex: o código abre o nome e as fichas dele
+async function abrirPerfil(codigo) {
   let perfil;
   try {
     perfil = await pedirVortex('/profiles/' + encodeURIComponent(codigo));
   } catch (e) {
-    if (e.status === 404) throw new ErroVortex('Nenhum perfil com o código ' + codigo + '.');
+    if (e.status === 404) throw new ErroVortex('Nenhum perfil do Vortex com o código ' + codigo + '.');
     throw e;
   }
-  const ids = deCampos(perfil.fields || {}).chars || [];
-  if (!ids.length) return [];
-  const lote = await pedirVortex(':batchGet', 'POST', {
-    documents: ids.slice(0, 100).map((id) => VORTEX_RAIZ + '/characters/' + id)
-  });
-  return lote.filter((x) => x.found).map((x) => resumoDaFicha(x.found));
-}
-
-// a ficha guarda os começos das palavras (searchKeys): sem acento e em minúsculas
-const chaveBusca = (t) => String(t).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
-
-async function fichasPeloNome(texto) {
-  const palavras = chaveBusca(texto).split(/[^\p{L}\p{N}]+/u).filter(Boolean);
-  if (!palavras.length) return [];
-  const maior = palavras.slice().sort((a, b) => b.length - a.length)[0].slice(0, 20);
-  const resultado = await pedirVortex(':runQuery', 'POST', {
-    structuredQuery: {
-      from: [{ collectionId: 'characters' }],
-      where: { fieldFilter: { field: { fieldPath: 'searchKeys' }, op: 'ARRAY_CONTAINS', value: { stringValue: maior } } },
-      limit: 40
-    }
-  });
-  return resultado
-    .filter((x) => x.document)
-    .map((x) => resumoDaFicha(x.document))
-    .filter((f) => {
-      const nomes = chaveBusca(f.nome + ' ' + f.especie).split(/[^\p{L}\p{N}]+/u);
-      return palavras.every((p) => nomes.some((n) => n.startsWith(p)));
+  const dados = deCampos(perfil.fields || {});
+  const ids = Array.isArray(dados.chars) ? dados.chars : [];
+  let fichas = [];
+  if (ids.length) {
+    const lote = await pedirVortex(':batchGet', 'POST', {
+      documents: ids.slice(0, 100).map((id) => VORTEX_RAIZ + '/characters/' + id)
     });
+    fichas = lote.filter((x) => x.found).map((x) => resumoDaFicha(x.found));
+  }
+  return { codigo, nome: dados.name || 'Perfil ' + codigo, fichas };
 }
+
+// texto sem acento e em minúsculas, para buscas e comparações
+const chaveBusca = (t) => String(t).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 
 /* ---------- Inventário ---------- */
 
