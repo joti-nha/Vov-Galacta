@@ -97,7 +97,7 @@ Este site e o Vortex estão no mesmo endereço (`joti-nha.github.io`), então di
 - **Personagens:** a lista de quem pode cozinhar são as fichas desse perfil.
 - **Temas:** os temas desbloqueados no Vortex (`vortex.themes.v1`) aparecem aqui com as mesmas cores, e trocar o tema aqui troca lá também.
 - **Abas abertas:** se o Vortex estiver aberto em outra aba e o tema ou a conta mudar lá, este site acompanha na hora.
-- **Tema Nyan Cat:** os gatos voam ao fundo como no Vortex, usando as mesmas artes que o Vortex publica em `Vortex_aplication/img/nyan/` (por isso só aparecem no site publicado).
+- **Tema Nyan Cat:** é o código do próprio Vortex, portado em `js/tema-nyan.js`: a revoada (as 56 variantes vão chegando em uns 10 minutos, cada uma numa faixa livre do céu), o rastro de cada variante (arco-íris em degraus, 16-bit, símbolos, visualizador, falha...), os cenários dos Nyans famosos (o Vaporwave traz o Sol Synthwave), o gato grande cruzando a tela e a música com o botão ♪. As artes e a música vêm de `Vortex_aplication/` (por isso só aparecem no site publicado), e o relógio da revoada é o mesmo do Vortex.
 - **Limite:** os temas desbloqueados ficam guardados por aparelho, como no próprio Vortex; o perfil do Vortex não guarda temas.
 
 ## Inventário do Vortex — `js/vortex-api.js`
@@ -119,7 +119,7 @@ js/cardapio.js      os pratos da API: tradução, arte e aula
 js/receitas-api.js  TheMealDB
 js/vortex-api.js    Firebase do Vortex (login, perfil, inventário)
 js/conta.js         conta e temas divididos com o Vortex
-js/tema-nyan.js     os gatos voando do tema Nyan Cat
+js/tema-nyan.js     o tema Nyan Cat do Vortex (revoada, rastros, cenários, gato grande, música)
 js/minigames.js     os sete jogos de toque, as dificuldades, a sugestão de aula, o teste e o item do prato
 js/app.js           estado global, navegação, listagem, cadastro, conta e cozinha
 img/                ilustração do início e ícone
