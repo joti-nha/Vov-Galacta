@@ -686,7 +686,8 @@ button.cartao__arte:focus-visible { outline-offset: -4px; }
 .medidor__nivel { height: 100%; width: 0; background: var(--mare); transition: width 0.12s; }
 
 /* Medir: copo, jato e jarra que inclina */
-.medir { position: relative; height: 270px; width: min(100%, 360px); justify-self: center; }
+/* a cena tem a largura do copo + jarra (204 px), para ficar no meio da tela */
+.medir { position: relative; height: 270px; width: 210px; justify-self: center; margin-inline: auto; }
 .copo {
   position: absolute; left: 0; bottom: 0; width: 130px; height: 200px;
   border: 4px solid var(--nevoa-2); border-top: none; border-radius: 0 0 18px 18px;
